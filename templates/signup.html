@@ -1,0 +1,22 @@
+<!-- signup.html -->
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Recipe Recommender{% endblock %}
+
+{% block content %}
+<h2>Sign Up</h2>
+<form action="/signup" method="POST">
+    <input type="text" id="name" placeholder="Name" required><br>
+    <input type="email" id="email" placeholder="Email" required><br>
+    <input type="password" id="password" placeholder="Password" required><br>
+    <p>Gym Member<input type="checkbox" id="gym_member"></p>
+    <p>Select Dite Plan</p>
+    <select id="diet_type">
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+    </select><br>
+    <input type="text" id="allergies" placeholder="Allergies"><br>
+    <button type="submit">Sign Up</button>
+</form>
+{% endblock %}

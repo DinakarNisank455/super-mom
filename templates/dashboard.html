@@ -1,0 +1,31 @@
+<!-- dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Recipe Recommender{% endblock %}
+
+{% block content %}
+<h1>Welcome to Your Dashboard</h1>
+
+<!-- Nutrition Tracking Section -->
+<h2>Your Nutrition Intake</h2>
+<select id="nutrition-period">
+    <option value="daily">Daily</option>
+    <option value="monthly">Monthly</option>
+</select>
+<button onclick="fetchNutrition()">View</button>
+<canvas id="nutritionChart"></canvas>
+
+<!-- Recipe Recommendation Section -->
+<h2>Find Recipes</h2>
+<input type="text" id="ingredients" placeholder="Enter ingredients (comma separated)">
+<button onclick="fetchRecipes()">Get Recipes</button>
+<div id="recipe-results"></div>
+
+<h2>Meal History</h2>
+<select id="meal-period">
+    <option value="daily">Daily</option>
+    <option value="monthly">Monthly</option>
+</select>
+<button onclick="fetchMealHistory()">View</button>
+<div id="meal-history"></div>
+{% endblock %}
