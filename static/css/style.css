@@ -1,9 +1,20 @@
 /* style.css */
+/* General Styles */
 body {
     font-family: Arial, sans-serif;
-    background-color: #f8f9fa;
     margin: 0;
-    padding: 20px;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* Light & Dark Themes */
+.light-theme {
+    background-color: #f8f9fa;
+    color: #000;
+}
+
+.dark-theme {
+    background-color: #333;
+    color: #fff;
 }
 
 nav {
@@ -59,7 +70,7 @@ button {
 input {
     margin: 5px;
     padding: 10px;
-    width: 200px;
+    max-width: 200px;
 }
 
 .login-box {
@@ -152,4 +163,64 @@ input {
     display: block;
     margin-top: 10px;
     font-weight: bold;
+}
+
+
+/* Recipe Cards */
+#recipe-container {
+    display: grid;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.recipe-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.recipe-card:hover {
+    transform: scale(1.05);
+}
+
+.recipe-card h3 {
+    margin-bottom: 10px;
+}
+
+.recipe-card p {
+    font-size: 14px;
+}
+
+/* Grid & List View */
+.grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.list-view {
+    display: block;
+}
+
+.video-preview iframe {
+    border-radius: 8px;
+}
+
+/* Theme Toggle Button */
+#theme-toggle {
+    background-color: #fff;
+    color: #000;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+#theme-toggle:hover {
+    background-color: #ddd;
+}
+
+.toggle{
+    width: 25px;
+    height: 30px;
 }
