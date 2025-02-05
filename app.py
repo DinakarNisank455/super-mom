@@ -8,6 +8,9 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = "secret"
 
+app_id = "9339488b"
+app_key = "4f804a4822c6c387579112bcda286297"
+
 # Function to establish a fresh database connection
 def get_db_connection():
     return pymysql.connect(host="localhost", user="root", password="@Bunny455", database="prr")
@@ -124,28 +127,54 @@ def dashboard():
 
 @app.route('/recipe_search', methods=['GET', 'POST'])
 def recipe_search():
-    search_results = []
-    query = ""
+    query = request.args.get('query', '')
+    search_type = request.args.get('search_type', 'name')
+    diet_filter = request.args.get('diet_filter', '')
+    use_nutrition = request.args.get('use_nutrition', False)
 
-    if request.method == 'POST':
-        query = request.form.get('query', '').strip()
+    # Nutrition Filters
+    calories = request.args.get('calories', '')
+    protein = request.args.get('protein', '')
+    fat = request.args.get('fat', '')
 
-        if query:
-            db = get_db_connection()
-            cursor = db.cursor()
-            
-            # Search for recipes by name, ingredients, or diet type
-            sql = """
-            SELECT * FROM recipes
-            WHERE name LIKE %s OR ingredients LIKE %s OR diet_type LIKE %s
-            """
-            cursor.execute(sql, (f"%{query}%", f"%{query}%", f"%{query}%"))
-            search_results = cursor.fetchall()
-            
-            cursor.close()
-            db.close()
+    if not query:
+        return render_template("recipe_search.html", search_results=[])
 
-    return render_template('recipe_search.html', search_results=search_results, query=query)
+    # Build API URL based on search type
+    api_url = f"https://api.edamam.com/api/recipes/v2?q={query}&app_id={app_id}&app_key={app_key}&type=public"
+
+    if diet_filter:
+        api_url += f"&diet={diet_filter}"
+
+    if use_nutrition:
+        api_url += f"&calories=0-{calories}" if calories else ""
+        api_url += f"&nutrients[PROCNT]={protein}-" if protein else ""
+        api_url += f"&nutrients[FAT]=-{fat}" if fat else ""
+
+    response = requests.get(api_url)
+    data = response.json()
+
+    # Extract recipe details
+    recipes = []
+    if "hits" in data:
+        for hit in data["hits"]:
+            recipe = hit["recipe"]
+            recipes.append({
+                "name": recipe["label"],
+                "image": recipe["image"],
+                "recipe_link": recipe["url"],
+                "diet_type": ", ".join(recipe.get("dietLabels", ["N/A"])),
+                "ingredients": ", ".join(recipe.get("ingredientLines", [])),
+                "nutrition": {
+                    "calories": int(recipe["calories"]) if "calories" in recipe else "N/A",
+                    "protein": recipe["totalNutrients"].get("PROCNT", {}).get("quantity", "N/A"),
+                    "fat": recipe["totalNutrients"].get("FAT", {}).get("quantity", "N/A")
+                },
+                "video_link": f"https://www.youtube.com/results?search_query={recipe['label']}+recipe"
+            })
+
+
+    return render_template('recipe_search.html', recipes=recipes)
 
 @app.route("/logout")
 def logout():
