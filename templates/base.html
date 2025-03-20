@@ -6,21 +6,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Recipe Recommender{% endblock %}</title>
-    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="\static\css\style.css">
 </head>
 
 <nav class="navbar">
     
-    <ul class="nav-links">
+    <div>
         <img src="static/image/logo.png" class="logo" alt="Logo">
+    </div>
+    <ul class="nav-links">
         {% if 'user_id' in session %}
-        <li><a href="/">Home</a></li>
-        <li><a href="/dashboard">Dashboard</a></li>
-        <li><a href="/recipe_search">Recipes</a></li>
-        <li><a href="/logout">Logout</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/recipe_search">Recipes</a></li>
+            <li><a href="/logout">Logout</a></li>
         {% else %}
-        <li><a href="/login">Login</a></li>
-        <li><a href="/signup">Sign Up</a></li>
+            <li><a href="/login">Login</a></li>
+            <li><a href="/signup">Sign Up</a></li>
         {% endif %}
     </ul>
 </nav>
@@ -39,12 +41,12 @@
     {% endfor %}
     {% endif %}
     {% endwith %}
-    
+    <div>
+        <footer>
+            <p>Copyrights @2025 are owned by personal_recipe_recommender</p>
+        </footer>
+    </div>
+
 </body>
-<div>
-    <footer>
-        <p>Copyrights @2025 are owned by personal_recipe_recommender</p>
-    </footer>
-</div>
 
 </html>
