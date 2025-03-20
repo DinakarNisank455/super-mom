@@ -11,12 +11,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Search</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <script defer src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="statc/script.js"></script>
 </head>
 
-<body class="light-theme">
+<body class="theme">
     <main class="container">
-        <h1>Search for Recipes</h1>
+        <div>
+            <h1>Search for Recipes</h1>
+                <button class="toggle" id="toggle-view">
+                    <img id="view-icon" src="static/icons/grid.png">
+                </button>
+                <button class="toggle" id="toggle-theme">
+                    <img id="theam icon" src="static/icons/theam_logo.png">
+                </button>
+        </div>
+
+
 
         <form action="{{ url_for('recipe_search') }}" method="GET">
             <label for="search_type">Search By:</label>
@@ -56,22 +66,25 @@
 
         </form>
 
-        <button class="toggle" id="toggle-view">
-            <img id="view-icon" src="{{ url_for('static', filename='icons/grid.png') }}">
-        </button>
 
-        {% if search_results %}
+        {% if recipes %}
         <h2>Search Results:</h2>
         <div id="recipe-container" class="grid-view">
-            {% for recipe in search_results %}
+            {% for recipe in recipes %}
             <div class="recipe-card">
                 <h3>{{ recipe.name }}</h3>
                 <p><strong>Diet:</strong> {{ recipe.diet_type }}</p>
-                <p><strong>Ingredients:</strong> {{ recipe.ingredients }}</p>
+                <p><strong>Ingredients:</strong></p>
+                <ul>
+                    {% for ingredient in recipe.ingredients.split(', ') %}
+                    <li>{{ ingredient }}</li>
+                    {% endfor %}
+                </ul>
                 <p><strong>Calories:</strong> {{ recipe.nutrition.calories }}</p>
                 <p><strong>Protein:</strong> {{ recipe.nutrition.protein }}g</p>
                 <p><strong>Fat:</strong> {{ recipe.nutrition.fat }}g</p>
-                <a href="{{ recipe.recipe_link }}" target="_blank" class="btn">View Recipe</a>
+                <a href="{{ url_for('recipe_detail', recipe_url=recipe.recipe_link) }}" class="btn">View Recipe</a>
+
 
                 {% if recipe.video_link %}
                 <div class="video-preview">

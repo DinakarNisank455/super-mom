@@ -72,7 +72,10 @@ def signup():
 
         except pymysql.MySQLError as e:
             db.rollback()
-            flash(f"Database error: {str(e)}", "error")
+            if (str(e)=="duplicate"):
+                flash(f"User already exist.")
+            else:
+                flash(f"Database error: {str(e)}", "error")
 
         finally:
             cursor.close()
@@ -170,11 +173,25 @@ def recipe_search():
                     "protein": recipe["totalNutrients"].get("PROCNT", {}).get("quantity", "N/A"),
                     "fat": recipe["totalNutrients"].get("FAT", {}).get("quantity", "N/A")
                 },
-                "video_link": f"https://www.youtube.com/results?search_query={recipe['label']}+recipe"
+                "source_name": recipe["source"],
+                "source_url": recipe["url"]
             })
 
+            session["search_results"] = recipes
 
     return render_template('recipe_search.html', recipes=recipes)
+
+
+@app.route('/recipe/<path:recipe_url>')
+def recipe_detail(recipe_url):
+    recipes = session.get("search_results", [])
+    for recipe in recipes:
+        if recipe["recipe_link"] == recipe_url:  # Match by URL instead of ID
+            return render_template("recipe_detail.html", recipe=recipe)
+
+    flash("Recipe not found!", "error")
+    return redirect(url_for("recipe_search"))
+
 
 @app.route("/logout")
 def logout():

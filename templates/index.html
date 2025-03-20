@@ -4,47 +4,51 @@
 {% block title %}Welcome - Recipe Recommender{% endblock %}
 
 {% block content %}
-<section class="hero">
-    <div class="hero-content">
-        <h1>Welcome to Recipe Recommender</h1>
-        <p>Discover personalized recipes based on your preferences, allergies, and nutritional goals.</p>
-        <a href="/signup" class="btn-primary">Get Started</a>
-    </div>
-</section>
+<body>
+    <div>
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Welcome to Recipe Recommender</h1>
+            <p>Discover personalized recipes based on your preferences, allergies, and nutritional goals.</p>
+            <a href="/signup" class="btn-primary">Get Started</a>
+        </div>
+    </section>
 
-<section class="features">
-    <h2>Key Features</h2>
-    <div class="feature-grid">
-        <div class="feature-card">
-            <h3>Personalized Recipe Suggestions</h3>
-            <p>Get tailored recipe recommendations based on your dietary needs and food preferences.</p>
+    <section class="features">
+        <h2>Key Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Personalized Recipe Suggestions</h3>
+                <p>Get tailored recipe recommendations based on your dietary needs and food preferences.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Meal Planning</h3>
+                <p>Plan your meals for the week and create a grocery list to save time and effort.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Track Your Nutritional Goals</h3>
+                <p>Stay on track with your nutrition by setting goals and tracking your intake.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Auto generated grocery List</h3>
+                <p>Just select the recipe and see the magic of geting list of ingredietnts added to your shopping List</p>            
+            </div>
         </div>
-        <div class="feature-card">
-            <h3>Meal Planning</h3>
-            <p>Plan your meals for the week and create a grocery list to save time and effort.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Track Your Nutritional Goals</h3>
-            <p>Stay on track with your nutrition by setting goals and tracking your intake.</p>
-        </div>
-        <div class="feature-card">
-            <h3>Auto generated grocery List</h3>
-            <p>Just select the recipe and see the magic of geting list of ingredietnts added to your shopping List</p>            
-        </div>
-    </div>
-</section>
+    </section>
 
-<section class="testimonial">
-    <h2>What Our Users Say</h2>
-    <div class="testimonial-card">
-        <p>"This app has completely changed the way I approach meal planning! It's easy to use and provides great
-            recommendations!"</p>
-        <span>- Alex, Health Enthusiast</span>
-    </div>
-    <div class="testimonial-card">
-        <p>"I love how the app tailors recipes to my dietary preferences and allergies. It's like having a personal
-            nutritionist!"</p>
-        <span>- Sam, Vegan</span>
-    </div>
-</section>
+    <section class="testimonial">
+        <h2>What Our Users Say</h2>
+        <div class="testimonial-card">
+            <p>"This app has completely changed the way I approach meal planning! It's easy to use and provides great
+                recommendations!"</p>
+            <span>- Alex, Health Enthusiast</span>
+        </div>
+        <div class="testimonial-card">
+            <p>"I love how the app tailors recipes to my dietary preferences and allergies. It's like having a personal
+                nutritionist!"</p>
+            <span>- Sam, Vegan</span>
+        </div>
+    </section>
+</div>
+</body>
 {% endblock %}
