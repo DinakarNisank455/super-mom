@@ -3,15 +3,21 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
-    background-image: url('/static/images/base_bg.jpg');
-    background-size: cover;
-    background-repeat: no-repeat;
-    scroll-behavior: auto;
-    overflow: auto;
-    max-height: 100%;
-    padding-top:60px;
-}
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    flex-direction: column;
 
+    /* Background with Diet Food: Oats, Salad, Chicken, Smoothies */
+    background: linear-gradient(to bottom, rgba(76, 2, 112, 0.8), rgba(164, 106, 223, 0.8)),
+        url('https://img.freepik.com/free-vector/hand-drawn-healthy-food-pattern_23-2148747710.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 /* Light & Dark Themes */
 .light-theme {
     background-color: #f8f9fa;
@@ -72,7 +78,7 @@ body {
 }
 
 .container {
-    margin: auto;
+    margin-top: 75px;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -80,7 +86,134 @@ body {
     text-align: center;
     min-height: 100px;
 }
+/* Form Container */
+.form-container {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 30px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    width: 400px;
+    text-align: center;
+}
 
+/* Form Title */
+.form-title {
+    font-size: 28px;
+    font-weight: bold;
+    background: #A38DFF;
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+}
+
+/* Input Fields */
+.input-group {
+    margin: 15px 0;
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #fff;
+}
+
+.input-group input,
+.input-group select {
+    width: 380px;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.6);
+}
+
+/* Gym Membership Checkbox */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #A38DFF;
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.checkbox-group input {
+    transform: scale(1.5);
+    margin-left: 10px;
+}
+
+/* Diet Plan Select */
+.select-group {
+    background: rgba(255, 235, 205, 0.8);
+    padding: 10px;
+    border-radius: 10px;
+    text-align: left;
+    cursor: pointer;
+}
+
+/* Radio Button Styling for Daily, Monthly, Weekly */
+.radio-group {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.radio-group label {
+    background: rgba(255, 100, 100, 0.8);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 15px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.radio-group input {
+    display: none;
+}
+
+.radio-group input:checked+label {
+    background: #ff5722;
+}
+
+/* Submit Button */
+.btn {
+    background: #5F9DF7;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.register-btn:hover {
+    background: #007BFF;
+}
+
+/* Background Text */
+.background-text {
+    position: absolute;
+    top: 10%;
+    right: 10%;
+    font-size: 14px;
+    color: #fff;
+}
+
+.background-text.bottom {
+    bottom: 10%;
+    top: auto;
+    left: 10%;
+    font-size: 14px;
+}
+
+.background-text span {
+    color: lightgreen;
+}
 button {
     font-size: medium;
     background: #ed9163;
@@ -163,7 +296,6 @@ input {
 }
 
 .testimonial {
-    background-color: #f4f4f4;
     padding: 50px 0;
     text-align: center;
 }

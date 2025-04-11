@@ -1,22 +1,64 @@
-<!-- signup.html -->
+<!-- register page.html -->
 {% extends "base.html" %}
 
-    {% block title %}Sign Up - Recipe Recommender{% endblock %}
+{% block title %}personal Recipe Recommender{% endblock %}
 
 {% block content %}
-<h2>Sign Up</h2>
-<form action="/signup" method="POST">
-    <input type="text" name="name" id="name" placeholder="Name" required><br>
-    <input type="email" name="email" id="email" placeholder="Email" required><br>
-    <input type="password" name="password"id="password" placeholder="Password" required><br>
-    <p>Gym Member<input type="checkbox" name="gym_member" id="gym_member"></p>
-    <p>Select Dite Plan:</p>
-    <select style="padding:10px;width: 185.6px;" name="diet_type" id="diet_type">
-        <option value="daily">Daily</option>
-        <option value="weekly">Weekly</option>
-        <option value="monthly">Monthly</option>
-    </select><br>
-    <input type="text" name="allergies" id="allergies" placeholder="Allergies"><br>
-    <button type="submit">Sign Up</button>
-</form>
+
+<body>
+    <div class="form-container">
+        <div class="form-title">REGISTER</div>
+
+        <div class="input-group">
+            <label>Name</label>
+            <input type="text" placeholder="Enter your name">
+        </div>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input type="email" placeholder="Enter your email">
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" placeholder="Enter your password">
+        </div>
+
+        <div class="checkbox-group">
+            GYM MEMBER <input type="checkbox">
+        </div>
+
+        <div class="input-group select-group">
+            <label>Select Diet Plan</label>
+            <select>
+                <option>Select</option>
+                <option>Weight Loss</option>
+                <option>Muscle Gain</option>
+                <option>Balanced Diet</option>
+            </select>
+        </div>
+
+        <!-- Daily, Monthly, Weekly Selection -->
+        <div class="radio-group">
+            <input type="radio" id="daily" name="plan" checked>
+            <label for="daily">DAILY</label>
+
+            <input type="radio" id="monthly" name="plan">
+            <label for="monthly">MONTHLY</label>
+
+            <input type="radio" id="weekly" name="plan">
+            <label for="weekly">WEEKLY</label>
+        </div>
+
+        <div class="input-group">
+            <label>Allergies</label>
+            <input type="text" placeholder="Enter any allergies">
+        </div>
+
+        <button class="register-btn">REGISTER</button>
+    </div>
+
+</body>
+
+</html>
 {% endblock %}
