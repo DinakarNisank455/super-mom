@@ -132,15 +132,20 @@ def dashboard():
 
     return render_template("dashboard.html", user=user)
 
-# ✅ Recipe Search Route
-@app.route('/recipe_search', methods=['GET', 'POST'])
+@app.route('/recipe_search', methods=['GET'])
 def recipe_search():
     query = request.args.get('query', '').strip()
+    search_type = request.args.get('search_type', 'name')
 
     if not query:
         return render_template("recipe_search.html", recipes=[])
 
-    api_url = f"https://api.edamam.com/api/recipes/v2?q={query}&app_id={app_id}&app_key={app_key}&type=public"
+    if search_type == 'ingredients':
+        ingredients = ','.join([ingredient.strip() for ingredient in query.split(',')])
+        api_url = f"https://api.edamam.com/api/recipes/v2?app_id={app_id}&app_key={app_key}&type=public&ingr={ingredients}"
+    else:
+        api_url = f"https://api.edamam.com/api/recipes/v2?q={query}&app_id={app_id}&app_key={app_key}&type=public"
+
     response = requests.get(api_url)
     data = response.json()
 
@@ -164,8 +169,54 @@ def recipe_search():
             })
 
     session["search_results"] = recipes  # Store results in session
-
     return render_template('recipe_search.html', recipes=recipes)
+
+# ✅ Save Recipe Route
+@app.route('/save_recipe', methods=['POST'])
+def save_recipe():
+    if 'user_id' not in session:
+        flash("⚠️ Please log in to save recipes.", "error")
+        return redirect(url_for("login"))
+
+    recipe_data = request.form
+    db = get_db_connection()
+    cursor = db.cursor()
+    cursor.execute("""
+        INSERT INTO saved_recipes (user_id, recipe_name, image_url, recipe_url, diet_type, ingredients, calories, protein, fat)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """, (
+        session['user_id'],
+        recipe_data['name'],
+        recipe_data['image'],
+        recipe_data['url'],
+        recipe_data['diet_type'],
+        recipe_data['ingredients'],
+        recipe_data['calories'],
+        recipe_data['protein'],
+        recipe_data['fat']
+    ))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    flash("✅ Recipe saved successfully!", "success")
+    return redirect(url_for("dashboard"))
+
+# ✅ View Saved Recipes
+@app.route('/saved_recipes')
+def saved_recipes():
+    if 'user_id' not in session:
+        flash("⚠️ Please log in to view saved recipes.", "error")
+        return redirect(url_for("login"))
+
+    db = get_db_connection()
+    cursor = db.cursor(pymysql.cursors.DictCursor)
+    cursor.execute("SELECT * FROM saved_recipes WHERE user_id = %s", (session['user_id'],))
+    recipes = cursor.fetchall()
+    cursor.close()
+    db.close()
+
+    return render_template('saved_recipes.html', recipes=recipes)
 
 # ✅ Recipe Detail Route (Fixed)
 @app.route('/recipe/<int:recipe_id>')

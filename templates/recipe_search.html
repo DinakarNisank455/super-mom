@@ -1,61 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}Recipe Search{% endblock %}
+{% block title %}Personal Recipe Recommender{% endblock %}
 
 {% block content %}
-<main class="container">
-    <h1>Find a Recipe</h1>
+<h2 style="text-align: center;">🔍 Search for Recipes</h2>
 
-    <form method="GET" action="{{ url_for('recipe_search') }}">
-        <input type="text" name="query" placeholder="Search for recipes..." required>
-        <button type="submit">Search</button>
-    </form>
-
-    {% if recipes %}
-    <div class="view-toggle">
-        <button id="toggleViewBtn">Switch to List View</button>
+<form method="get" action="{{ url_for('recipe_search') }}">
+    <div class="search-container">
+        <p>🔍</p>
+        <input type="text" name="query" placeholder="Enter ingredients or recipe name" required>
+        <select name="search_type">
+            <option value="name">By Name</option>
+            <option value="ingredients">By Ingredients</option>
+        </select>
+        <button class="btn" type="submit">Search</button>
     </div>
+</form>
 
-    <h2>Search Results:</h2>
-    <div id="recipe-container" class="grid-view">
-        {% for recipe in recipes %}
-        <div class="recipe-card">
-            <h3>{{ recipe.name }}</h3>
-            <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
-            <p><a href="{{ url_for('recipe_detail', recipe_id=loop.index0) }}">View Recipe</a></p>
-        </div>
-        {% endfor %}
+<div class="toggle-container">
+    <button class="toggle-btn" onclick="toggleView()">🔄 Toggle View</button>
+</div>
+
+{% if recipes %}
+<div id="recipeResults" class="recipe-container grid-view">
+    {% for recipe in recipes %}
+    <div class="recipe-card">
+        <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
+        <h3>{{ recipe.name }}</h3>
+        <p><strong>Calories:</strong> {{ recipe.nutrition.calories|round }} kcal</p>
+        <p><strong>Protein:</strong> {{ recipe.nutrition.protein|round(1) }} g</p>
+        <p><strong>Fat:</strong> {{ recipe.nutrition.fat|round(1) }} g</p>
+        <a href="{{ url_for('recipe_detail', recipe_id=loop.index0) }}" class="btn">View Details</a>
     </div>
-    {% else %}
-    <p>No recipes found. Try another search!</p>
-    {% endif %}
-</main>
+    {% endfor %}
+</div>
+{% else %}
+<p style="text-align: center;">🔎 No recipes found. Try another search!</p>
+{% endif %}
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let toggleBtn = document.getElementById("toggleViewBtn");
-        let recipeContainer = document.getElementById("recipe-container");
-        let viewMode = localStorage.getItem("viewMode") || "grid";
-
-        function updateView() {
-            if (viewMode === "list") {
-                recipeContainer.classList.add("list-view");
-                recipeContainer.classList.remove("grid-view");
-                toggleBtn.textContent = "Switch to Grid View";
-            } else {
-                recipeContainer.classList.add("grid-view");
-                recipeContainer.classList.remove("list-view");
-                toggleBtn.textContent = "Switch to List View";
-            }
-        }
-
-        toggleBtn.addEventListener("click", function () {
-            viewMode = (viewMode === "grid") ? "list" : "grid";
-            localStorage.setItem("viewMode", viewMode);
-            updateView();
-        });
-
-        updateView();
-    });
+    function toggleView() {
+        const container = document.getElementById("recipeResults");
+        container.classList.toggle("grid-view");
+        container.classList.toggle("list-view");
+    }
 </script>
 {% endblock %}

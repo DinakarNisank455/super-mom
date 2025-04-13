@@ -1,28 +1,38 @@
 {% extends "base.html" %}
 
-{% block title %} Recipe Details {% endblock %}
+{% block title %}personal Recipe Recommender{% endblock %}
 
 {% block content %}
-<div class="container">
     <h2>{{ recipe.name }}</h2>
-    <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
+    <img src="{{ recipe.image }}" alt="Recipe Image" width="300px"><br><br>
     <div class="recipe-card">
-    <h3>Ingredients</h3>
-    
-            <ul>
-                {% for ingredient in recipe.ingredients %}
-                <li>{{ ingredient }}</li>
-                {% endfor %}
-            </ul>
+            <p><strong>Diet Type:</strong> {{ recipe.diet_type }}</p>
+            <p><strong>Calories:</strong> {{ recipe.nutrition.calories|round }} kcal</p>
+            <p><strong>Protein:</strong> {{ recipe.nutrition.protein|round(1) }} g</p>
+            <p><strong>Fat:</strong> {{ recipe.nutrition.fat|round(1) }} g</p>
     </div>
 
-    <div class="recipe-card" >
-            <h3>Nutrition Information</h3>
-            <p>Calories: {{ recipe.nutrition.calories }} kcal</p>
-            <p>Protein: {{ recipe.nutrition.protein }} g</p>
-            <p>Fat: {{ recipe.nutrition.fat }} g</p>
-    </div>
-
-    <button type="submit" href="{{ request.referrer }}" >Back to Recipes</a>
+<div style="margin-top: 10px;" class="recipe-card">
+        <h4>🧂 Ingredients:</h4>
+        <ul>
+            {% for item in recipe.ingredients %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
 </div>
+    <form method="post" action="{{ url_for('save_recipe') }}">
+        <input type="hidden" name="name" value="{{ recipe.name }}">
+        <input type="hidden" name="image" value="{{ recipe.image }}">
+        <input type="hidden" name="url" value="{{ recipe.recipe_link }}">
+        <input type="hidden" name="diet_type" value="{{ recipe.diet_type }}">
+        <input type="hidden" name="ingredients" value="{{ recipe.ingredients | join(', ') }}">
+        <input type="hidden" name="calories" value="{{ recipe.nutrition.calories }}">
+        <input type="hidden" name="protein" value="{{ recipe.nutrition.protein }}">
+        <input type="hidden" name="fat" value="{{ recipe.nutrition.fat }}">
+        <button class="btn" type="submit">💾 Save Recipe</button>
+    </form>
+
+    <br><a href="{{ url_for('recipe_search') }}">⬅ Back to Search</a>
+
+
 {% endblock %}
