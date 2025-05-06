@@ -7,8 +7,8 @@
 
 <form method="post" action="{{ url_for('ingredient_search') }}">
     <div class="search-container">
-        <input type="text" name="ingredients" id="searchInput"  required>
-        <select style="width: 125px;" name="search_type" id="searchType" onchange="updatePlaceholder()">
+        <input type="text" name="ingredients" id="searchInput" placeholder="Enter Name or Ingredients" required>
+        <select style="width: 125px;" name="search_type" id="searchType">
             <option value="name">By Name</option>
             <option value="ingredients">By Ingredients</option>
         </select>
@@ -44,18 +44,6 @@
         container.classList.toggle("grid-view");
         container.classList.toggle("list-view");
     }
-
-    function updatePlaceholder() {
-        const searchType = document.getElementById("searchType").value;
-        const searchInput = document.getElementById("searchInput");
-        
-        if (searchType === 'name') {
-            searchInput.placeholder = "Enter recipe name (e.g., chicken curry)";
-        } else {
-            searchInput.placeholder = "Enter ingredients (comma separated, e.g., chicken, rice, vegetables)";
-        }
-    }
-
     // Initialize placeholder on page load
     document.addEventListener('DOMContentLoaded', updatePlaceholder);
 </script>

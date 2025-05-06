@@ -28,6 +28,10 @@
             <span class="action-icon">👤</span>
             <span class="action-text">Profile</span>
         </a>
+        <a href="{{ url_for('nutrition_monitor') }}" class="action-card">
+            <span class="action-icon">🍽️</span>
+            <span class="action-text">Nutrition Monitor</span>
+        </a>
     </div>
 
     <!-- Statistics Section -->
@@ -49,7 +53,7 @@
         <div class="stat-card">
             <span class="stat-icon">🍽️</span>
             <div class="stat-info">
-                <span class="stat-value">{{ total_calories|round }}</span>
+                <span class="stat-value">{{ total_calories|default(0)|round }}</span>
                 <span class="stat-label">Total Calories</span>
             </div>
         </div>
@@ -62,10 +66,10 @@
             {% if recent_activity %}
                 {% for activity in recent_activity %}
                 <div class="activity-item">
-                    <span class="activity-icon">{{ activity[3] }}</span>
+                    <span class="activity-icon">{{ activity.icon }}</span>
                     <div class="activity-content">
-                        <span class="activity-text">{{ activity[1] }}</span>
-                        <span class="activity-time">{{ activity[2] }}</span>
+                        <span class="activity-text">{{ activity.description }}</span>
+                        <span class="activity-time">{{ activity.time }}</span>
                     </div>
                 </div>
                 {% endfor %}

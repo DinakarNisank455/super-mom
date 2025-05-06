@@ -1,0 +1,1 @@
+2025-05-07 04:18:27,373 ERROR: Failed to create database connection: (1045, "Access denied for user 'root'@'localhost' (using password: NO)") [in C:\Users\nisan\projects\Personal_Recipe_Recommender\app.py:88]

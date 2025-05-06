@@ -7,6 +7,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import requests
 from difflib import get_close_matches
 import re
+import json
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 
 app = Flask(__name__)
 
@@ -269,6 +275,37 @@ def select_search():
         flash("⚠️ Invalid selection. Please try again.", "error")
         return redirect(url_for('nutrition_search'))
 
+def is_duplicate_recipe(recipe, seen_recipes):
+    """
+    Check if a recipe is a duplicate by comparing multiple attributes.
+    Returns True if it's a duplicate, False otherwise.
+    """
+    # Create a unique identifier based on multiple attributes
+    recipe_signature = {
+        'name': recipe.get("label", "Unknown Recipe").lower(),
+        'ingredients': sorted([ing.lower() for ing in recipe.get("ingredientLines", [])]),
+        'calories': round(float(recipe.get("calories", 0))),
+        'protein': round(float(recipe.get("totalNutrients", {}).get("PROCNT", {}).get("quantity", 0) or 0)),
+        'fat': round(float(recipe.get("totalNutrients", {}).get("FAT", {}).get("quantity", 0) or 0)),
+        'carbs': round(float(recipe.get("totalNutrients", {}).get("CHOCDF", {}).get("quantity", 0) or 0))
+    }
+    
+    # Convert to tuple for hashing
+    recipe_key = (
+        recipe_signature['name'],
+        tuple(recipe_signature['ingredients'][:5]),  # Compare first 5 ingredients
+        recipe_signature['calories'],
+        recipe_signature['protein'],
+        recipe_signature['fat'],
+        recipe_signature['carbs']
+    )
+    
+    if recipe_key in seen_recipes:
+        return True
+    
+    seen_recipes.add(recipe_key)
+    return False
+
 # Recipe Search by Ingredients
 @app.route("/ingredient_search", methods=["GET", "POST"])
 def ingredient_search():
@@ -355,11 +392,20 @@ def ingredient_search():
                 return render_template("ingredient_search.html", recipes=[], search_performed=search_performed)
 
             recipes = []
+            seen_recipes = set()  # Track unique recipes
+            duplicate_count = 0
+            
             for idx, hit in enumerate(data["hits"]):
                 if "recipe" not in hit:
                     continue
                     
                 recipe = hit["recipe"]
+                
+                # Check for duplicates using multiple attributes
+                if is_duplicate_recipe(recipe, seen_recipes):
+                    duplicate_count += 1
+                    continue
+                
                 try:
                     # Extract and clean recipe data
                     recipe_data = {
@@ -386,7 +432,9 @@ def ingredient_search():
                     print(f"Error processing recipe {idx}: {e}")
                     continue
 
-            print(f"Number of recipes found: {len(recipes)}")
+            print(f"Number of unique recipes found: {len(recipes)}")
+            if duplicate_count > 0:
+                flash(f"ℹ️ {duplicate_count} similar recipes were removed to avoid duplicates.", "info")
 
             if not recipes:
                 flash("⚠️ No valid recipes found matching your search.", "error")
@@ -454,8 +502,11 @@ def nutrition_search():
 
         # Get and validate search query
         query = request.form.get("query", "").strip()
+        
+        # If no query is provided, use a default search term that will return a variety of recipes
         if not query:
-            query = "*"
+            query = "healthy"  # Default search term that will return a good variety of recipes
+            flash("ℹ️ No search term provided. Showing a variety of recipes matching your nutritional criteria.", "info")
 
         print(f"Search Query: {query}")
         print(f"Nutrition Ranges:")
@@ -493,7 +544,7 @@ def nutrition_search():
             if not data or "hits" not in data or not data["hits"]:
                 # Provide helpful suggestions based on the search criteria
                 suggestions = []
-                if query != "*":
+                if query != "healthy":
                     suggestions.append(f"Try searching for '{query}' with less restrictive nutrition ranges")
                 if min_calories > 0 or max_calories < float('inf'):
                     suggestions.append("Try adjusting the calorie range")
@@ -506,14 +557,20 @@ def nutrition_search():
                 return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
 
             recipes = []
+            seen_recipes = set()  # Track unique recipes
+            
             for idx, hit in enumerate(data["hits"]):
                 if "recipe" not in hit:
                     continue
 
                 recipe = hit["recipe"]
+                
+                # Check for duplicates using multiple attributes
+                if is_duplicate_recipe(recipe, seen_recipes):
+                    continue
+                
                 try:
                     nutrition = {
-                        "idx": idx,
                         "calories": float(recipe.get("calories", 0)),
                         "protein": float(recipe.get("totalNutrients", {}).get("PROCNT", {}).get("quantity", 0) or 0),
                         "fat": float(recipe.get("totalNutrients", {}).get("FAT", {}).get("quantity", 0) or 0),
@@ -544,7 +601,7 @@ def nutrition_search():
                     print(f"Error processing recipe {idx}: {e}")
                     continue
 
-            print(f"Number of recipes found: {len(recipes)}")
+            print(f"Number of unique recipes found: {len(recipes)}")
 
             if not recipes:
                 flash("⚠️ No recipes found matching your nutritional criteria. Try adjusting the ranges.", "error")
@@ -572,29 +629,43 @@ def save_recipe():
         flash("⚠️ Please log in to save recipes.", "error")
         return redirect(url_for("login"))
 
-    recipe_data = request.form
-    db = get_db_connection()
-    with db.cursor() as cursor:
-        cursor.execute("""
-            INSERT INTO saved_recipes (user_id, recipe_name, image_url, recipe_url, diet_type, ingredients, calories, protein, fat,carbohydrates,fiber)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s)
-        """, (
-            session["user_id"],
-            recipe_data["name"],
-            recipe_data["image"],
-            recipe_data["url"],
-            recipe_data["diet_type"],
-            recipe_data["ingredients"],
-            recipe_data["calories"],
-            recipe_data["protein"],
-            recipe_data["fat"],
-            recipe_data["carbohydrates"],
-            recipe_data["fiber"]
-        ))
-    db.close()
+    try:
+        recipe_data = request.form.get('recipe_data')
+        if not recipe_data:
+            flash("⚠️ No recipe data provided.", "error")
+            return redirect(url_for("recipe_search"))
+            
+        recipe = json.loads(recipe_data)
+        
+        db = get_db_connection()
+        with db.cursor() as cursor:
+            cursor.execute("""
+                INSERT INTO saved_recipes (
+                    user_id, recipe_name, image_url, recipe_url, 
+                    diet_type, ingredients, calories, protein, 
+                    fat, carbohydrates, fiber
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                session["user_id"],
+                recipe.get("name", "Unknown Recipe"),
+                recipe.get("image", ""),
+                recipe.get("recipe_link", ""),
+                recipe.get("diet_type", "N/A"),
+                json.dumps(recipe.get("ingredients", [])),
+                recipe.get("nutrition", {}).get("calories", 0),
+                recipe.get("nutrition", {}).get("protein", 0),
+                recipe.get("nutrition", {}).get("fat", 0),
+                recipe.get("nutrition", {}).get("carbohydrates", 0),
+                recipe.get("nutrition", {}).get("fibers", 0)
+            ))
+        db.close()
 
-    flash("✅ Recipe saved successfully!", "success")
-    return redirect(url_for("dashboard"))
+        flash("✅ Recipe saved successfully!", "success")
+        return redirect(url_for("dashboard"))
+    except Exception as e:
+        print(f"Error saving recipe: {str(e)}")
+        flash("⚠️ Error saving recipe. Please try again.", "error")
+        return redirect(url_for("recipe_search"))
 
 # 🔹 YouTube Video Fetch
 def get_youtube_video(recipe_name):
@@ -771,46 +842,50 @@ def grocery_list():
 
 @app.route('/add_to_grocery_list', methods=['POST'])
 def add_to_grocery_list():
-    recipe_id = request.form.get('recipe_id')
-    if not recipe_id:
-        flash('No recipe selected', 'error')
-        return redirect(url_for('recipe_search'))
-    
     try:
+        recipe_id = request.form.get('recipe_id')
+        if not recipe_id:
+            flash("⚠️ No recipe selected", "error")
+            return redirect(url_for("recipe_search"))
+        
         recipe_id = int(recipe_id)
-        grocery_recipes = session.get('grocery_recipes', [])
+        recipes = session.get("ingredient_search_results") or session.get("nutrition_search_results")
         
+        if not recipes:
+            flash("⚠️ No recipe data available", "error")
+            return redirect(url_for("recipe_search"))
+            
+        if recipe_id < 0 or recipe_id >= len(recipes):
+            flash("⚠️ Invalid recipe ID", "error")
+            return redirect(url_for("recipe_search"))
+            
+        recipe = recipes[recipe_id]
+        
+        # Initialize grocery_recipes in session if it doesn't exist
+        if 'grocery_recipes' not in session:
+            session['grocery_recipes'] = []
+            
         # Check if recipe is already in the list
-        if any(recipe['idx'] == recipe_id for recipe in grocery_recipes):
-            flash('Recipe is already in your grocery list', 'info')
-            return redirect(url_for('recipe_search'))
+        if any(r.get('idx') == recipe_id for r in session['grocery_recipes']):
+            flash("ℹ️ Recipe is already in your grocery list", "info")
+            return redirect(url_for("recipe_search"))
         
-        # Get recipe details from the API
-        api_url = f"https://api.edamam.com/api/recipes/v2/{recipe_id}?type=public&app_id={EDAMAM_APP_ID}&app_key={EDAMAM_APP_KEY}"
-        response = requests.get(api_url)
-        
-        if response.status_code != 200:
-            flash('Failed to get recipe details', 'error')
-            return redirect(url_for('recipe_search'))
-        
-        recipe_data = response.json()
-        recipe = {
+        # Add recipe to grocery list with ingredients
+        session['grocery_recipes'].append({
             'idx': recipe_id,
-            'name': recipe_data['recipe']['label'],
-            'image': recipe_data['recipe']['image'],
-            'ingredients': recipe_data['recipe']['ingredients']
-        }
+            'name': recipe.get('name', 'Unknown Recipe'),
+            'ingredients': recipe.get('ingredients', [])
+        })
         
-        grocery_recipes.append(recipe)
-        session['grocery_recipes'] = grocery_recipes
-        flash('Recipe added to grocery list', 'success')
+        flash("✅ Recipe added to grocery list", "success")
         
-    except (ValueError, KeyError) as e:
-        flash('Invalid recipe data', 'error')
+    except ValueError:
+        flash("⚠️ Invalid recipe data", "error")
     except Exception as e:
-        flash('An error occurred while adding the recipe', 'error')
+        print(f"Error adding to grocery list: {str(e)}")
+        flash("⚠️ An error occurred while adding the recipe", "error")
     
-    return redirect(url_for('recipe_search'))
+    return redirect(url_for("recipe_search"))
 
 @app.route('/remove_from_grocery_list', methods=['POST'])
 def remove_from_grocery_list():
@@ -830,18 +905,131 @@ def remove_from_grocery_list():
     
     return redirect(url_for('grocery_list'))
 
+@app.route('/clear_grocery_list', methods=['POST'])
+def clear_grocery_list():
+    session.pop('grocery_recipes', None)
+    flash("✅ Grocery list cleared", "success")
+    return redirect(url_for("recipe_search"))
+
+@app.route('/generate_grocery_list', methods=['GET', 'POST'])
+def generate_grocery_list():
+    grocery_recipes = session.get('grocery_recipes', [])
+    if not grocery_recipes:
+        flash('⚠️ No recipes in grocery list', 'error')
+        return redirect(url_for('recipe_search'))
+    
+    # Combine and categorize ingredients
+    all_ingredients = []
+    for recipe in grocery_recipes:
+        for ingredient in recipe['ingredients']:
+            # Clean and standardize ingredient text
+            ingredient_text = ingredient.lower().strip()
+            
+            # Remove common measurements and quantities
+            ingredient_text = re.sub(r'\d+\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp|piece|pieces|slice|slices|pinch|dash|to taste)', '', ingredient_text)
+            ingredient_text = re.sub(r'\(.*?\)', '', ingredient_text)  # Remove parenthetical notes
+            ingredient_text = re.sub(r'fresh|dried|ground|minced|chopped|sliced|diced|grated|shredded', '', ingredient_text)  # Remove common preparation terms
+            ingredient_text = re.sub(r'\s+', ' ', ingredient_text)  # Remove extra spaces
+            ingredient_text = ingredient_text.strip()
+            
+            if ingredient_text:  # Only add non-empty ingredients
+                all_ingredients.append({
+                    'name': ingredient_text,
+                    'original': ingredient,  # Keep original text for reference
+                    'recipe': recipe['name']  # Track which recipe it came from
+                })
+    
+    # Group ingredients by category
+    categorized_ingredients = {}
+    for ingredient in all_ingredients:
+        category = categorize_ingredient(ingredient['name'])
+        if category not in categorized_ingredients:
+            categorized_ingredients[category] = []
+        categorized_ingredients[category].append(ingredient)
+    
+    # Sort categories alphabetically
+    categorized_ingredients = dict(sorted(categorized_ingredients.items()))
+    
+    # Sort ingredients within each category
+    for category in categorized_ingredients:
+        # Sort by name, then by recipe
+        categorized_ingredients[category].sort(key=lambda x: (x['name'], x['recipe']))
+        
+        # Remove duplicates while keeping the first occurrence
+        seen = set()
+        unique_ingredients = []
+        for ingredient in categorized_ingredients[category]:
+            if ingredient['name'] not in seen:
+                seen.add(ingredient['name'])
+                unique_ingredients.append(ingredient)
+        categorized_ingredients[category] = unique_ingredients
+    
+    # Calculate total number of ingredients
+    total_ingredients = sum(len(ingredients) for ingredients in categorized_ingredients.values())
+    
+    # Add summary information
+    summary = {
+        'total_recipes': len(grocery_recipes),
+        'total_ingredients': total_ingredients,
+        'categories': len(categorized_ingredients)
+    }
+    
+    return render_template('generated_list.html',
+                         categorized_ingredients=categorized_ingredients,
+                         recipes=grocery_recipes,
+                         summary=summary)
+
 def categorize_ingredient(ingredient_name):
     # Define ingredient categories and their keywords
     categories = {
-        'Produce': ['vegetable', 'fruit', 'herb', 'lettuce', 'spinach', 'kale', 'tomato', 'onion', 'garlic'],
-        'Dairy': ['milk', 'cheese', 'yogurt', 'butter', 'cream', 'sour cream'],
-        'Meat & Seafood': ['beef', 'chicken', 'pork', 'fish', 'shrimp', 'salmon', 'tuna', 'meat'],
-        'Pantry': ['flour', 'sugar', 'salt', 'pepper', 'oil', 'vinegar', 'spice', 'herb'],
-        'Bakery': ['bread', 'roll', 'bun', 'pastry', 'cake', 'cookie'],
-        'Frozen': ['frozen', 'ice cream'],
-        'Canned Goods': ['canned', 'jar', 'preserved'],
-        'Beverages': ['water', 'juice', 'soda', 'coffee', 'tea', 'wine', 'beer'],
-        'Snacks': ['chip', 'cracker', 'nut', 'snack'],
+        'Produce': [
+            'vegetable', 'fruit', 'herb', 'lettuce', 'spinach', 'kale', 'tomato', 'onion', 'garlic',
+            'potato', 'carrot', 'celery', 'cucumber', 'pepper', 'mushroom', 'broccoli', 'cauliflower',
+            'corn', 'peas', 'bean', 'lentil', 'apple', 'banana', 'orange', 'lemon', 'lime', 'berry',
+            'avocado', 'squash', 'zucchini', 'eggplant', 'asparagus', 'artichoke', 'radish', 'turnip',
+            'beet', 'cabbage', 'brussels sprout', 'kale', 'arugula', 'watercress', 'endive', 'fennel'
+        ],
+        'Dairy': [
+            'milk', 'cheese', 'yogurt', 'butter', 'cream', 'sour cream', 'cottage cheese', 'ricotta',
+            'parmesan', 'mozzarella', 'cheddar', 'feta', 'goat cheese', 'blue cheese', 'gouda', 'brie',
+            'cream cheese', 'mascarpone', 'provolone', 'swiss', 'ghee', 'buttermilk', 'half and half'
+        ],
+        'Meat & Seafood': [
+            'beef', 'chicken', 'pork', 'fish', 'shrimp', 'salmon', 'tuna', 'meat', 'lamb', 'turkey',
+            'bacon', 'sausage', 'ham', 'steak', 'ground beef', 'chicken breast', 'chicken thigh',
+            'cod', 'tilapia', 'halibut', 'mahi mahi', 'trout', 'mackerel', 'sardine', 'anchovy',
+            'crab', 'lobster', 'clam', 'mussel', 'oyster', 'scallop', 'calamari', 'octopus'
+        ],
+        'Pantry': [
+            'flour', 'sugar', 'salt', 'pepper', 'oil', 'vinegar', 'spice', 'herb', 'rice', 'pasta',
+            'noodle', 'cereal', 'oat', 'quinoa', 'couscous', 'breadcrumb', 'cracker', 'chip',
+            'baking powder', 'baking soda', 'yeast', 'cocoa', 'chocolate', 'vanilla', 'cinnamon',
+            'nutmeg', 'clove', 'ginger', 'cumin', 'paprika', 'turmeric', 'oregano', 'basil', 'thyme',
+            'rosemary', 'sage', 'dill', 'parsley', 'chive', 'mint', 'tarragon', 'marjoram'
+        ],
+        'Bakery': [
+            'bread', 'roll', 'bun', 'pastry', 'cake', 'cookie', 'muffin', 'bagel', 'tortilla',
+            'pita', 'naan', 'croissant', 'biscuit', 'scone', 'donut', 'waffle', 'pancake', 'crepe'
+        ],
+        'Frozen': [
+            'frozen', 'ice cream', 'frozen vegetable', 'frozen fruit', 'frozen meal', 'frozen pizza',
+            'frozen meat', 'frozen seafood', 'frozen dessert', 'frozen juice', 'frozen yogurt'
+        ],
+        'Canned Goods': [
+            'canned', 'jar', 'preserved', 'sauce', 'soup', 'broth', 'stock', 'canned vegetable',
+            'canned fruit', 'canned meat', 'canned fish', 'canned bean', 'canned tomato',
+            'canned corn', 'canned mushroom', 'canned soup', 'canned broth', 'canned sauce'
+        ],
+        'Beverages': [
+            'water', 'juice', 'soda', 'coffee', 'tea', 'wine', 'beer', 'milk', 'almond milk',
+            'soy milk', 'coconut milk', 'oat milk', 'rice milk', 'lemonade', 'iced tea',
+            'sports drink', 'energy drink', 'sparkling water', 'mineral water'
+        ],
+        'Snacks': [
+            'chip', 'cracker', 'nut', 'snack', 'popcorn', 'pretzel', 'granola', 'trail mix',
+            'dried fruit', 'jerky', 'beef jerky', 'fruit snack', 'cereal bar', 'protein bar',
+            'energy bar', 'candy', 'chocolate', 'gum', 'mint'
+        ],
         'Other': []  # Default category
     }
     
@@ -854,37 +1042,6 @@ def categorize_ingredient(ingredient_name):
     
     return 'Other'
 
-@app.route('/generate_grocery_list', methods=['POST'])
-def generate_grocery_list():
-    grocery_recipes = session.get('grocery_recipes', [])
-    if not grocery_recipes:
-        flash('No recipes in grocery list', 'error')
-        return redirect(url_for('grocery_list'))
-    
-    # Combine and categorize ingredients
-    all_ingredients = []
-    for recipe in grocery_recipes:
-        for ingredient in recipe['ingredients']:
-            all_ingredients.append({
-                'name': ingredient['food'],
-                'quantity': f"{ingredient.get('quantity', '')} {ingredient.get('measure', '')}"
-            })
-    
-    # Group ingredients by category
-    categorized_ingredients = {}
-    for ingredient in all_ingredients:
-        category = categorize_ingredient(ingredient['name'])
-        if category not in categorized_ingredients:
-            categorized_ingredients[category] = []
-        categorized_ingredients[category].append(ingredient)
-    
-    # Sort categories alphabetically
-    categorized_ingredients = dict(sorted(categorized_ingredients.items()))
-    
-    return render_template('generated_list.html',
-                         categorized_ingredients=categorized_ingredients,
-                         recipes=grocery_recipes)
-
 @app.route('/download_grocery_list')
 def download_grocery_list():
     grocery_recipes = session.get('grocery_recipes', [])
@@ -892,24 +1049,64 @@ def download_grocery_list():
         flash('No recipes in grocery list', 'error')
         return redirect(url_for('grocery_list'))
     
-    # Generate text content
-    content = "GROCERY LIST\n\n"
+    # Create a BytesIO buffer to store the PDF
+    buffer = io.BytesIO()
     
-    # Add recipes
-    content += "Recipes:\n"
+    # Create the PDF document
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    styles = getSampleStyleSheet()
+    
+    # Create custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        alignment=1  # Center alignment
+    )
+    
+    category_style = ParagraphStyle(
+        'CategoryStyle',
+        parent=styles['Heading2'],
+        fontSize=16,
+        textColor=colors.HexColor('#0B4B57'),
+        spaceAfter=12,
+        spaceBefore=20
+    )
+    
+    # Create the content list
+    content = []
+    
+    # Add title
+    content.append(Paragraph("🛒 Grocery List", title_style))
+    content.append(Spacer(1, 20))
+    
+    # Add recipes summary
+    content.append(Paragraph("Recipes Included:", styles['Heading3']))
     for recipe in grocery_recipes:
-        content += f"- {recipe['name']}\n"
-    
-    content += "\nIngredients:\n"
+        content.append(Paragraph(f"• {recipe['name']}", styles['Normal']))
+    content.append(Spacer(1, 20))
     
     # Combine and categorize ingredients
     all_ingredients = []
     for recipe in grocery_recipes:
         for ingredient in recipe['ingredients']:
-            all_ingredients.append({
-                'name': ingredient['food'],
-                'quantity': f"{ingredient.get('quantity', '')} {ingredient.get('measure', '')}"
-            })
+            # Clean and standardize ingredient text
+            ingredient_text = ingredient.lower().strip()
+            
+            # Remove common measurements and quantities
+            ingredient_text = re.sub(r'\d+\s*(g|kg|ml|l|oz|lb|cup|tbsp|tsp|piece|pieces|slice|slices|pinch|dash|to taste)', '', ingredient_text)
+            ingredient_text = re.sub(r'\(.*?\)', '', ingredient_text)  # Remove parenthetical notes
+            ingredient_text = re.sub(r'fresh|dried|ground|minced|chopped|sliced|diced|grated|shredded', '', ingredient_text)  # Remove common preparation terms
+            ingredient_text = re.sub(r'\s+', ' ', ingredient_text)  # Remove extra spaces
+            ingredient_text = ingredient_text.strip()
+            
+            if ingredient_text:  # Only add non-empty ingredients
+                all_ingredients.append({
+                    'name': ingredient_text,
+                    'original': ingredient,
+                    'recipe': recipe['name']
+                })
     
     # Group ingredients by category
     categorized_ingredients = {}
@@ -922,16 +1119,55 @@ def download_grocery_list():
     # Sort categories alphabetically
     categorized_ingredients = dict(sorted(categorized_ingredients.items()))
     
+    # Sort ingredients within each category and remove duplicates
+    for category in categorized_ingredients:
+        # Sort by name, then by recipe
+        categorized_ingredients[category].sort(key=lambda x: (x['name'], x['recipe']))
+        
+        # Remove duplicates while keeping the first occurrence
+        seen = set()
+        unique_ingredients = []
+        for ingredient in categorized_ingredients[category]:
+            if ingredient['name'] not in seen:
+                seen.add(ingredient['name'])
+                unique_ingredients.append(ingredient)
+        categorized_ingredients[category] = unique_ingredients
+    
     # Add categorized ingredients to content
     for category, ingredients in categorized_ingredients.items():
-        content += f"\n{category}:\n"
-        for ingredient in ingredients:
-            content += f"- {ingredient['name']}: {ingredient['quantity']}\n"
+        content.append(Paragraph(f"📋 {category}", category_style))
+        
+        # Create a table for ingredients
+        data = [[Paragraph("□", styles['Normal']), Paragraph(ingredient['original'], styles['Normal'])] 
+                for ingredient in ingredients]
+        
+        # Create the table
+        table = Table(data, colWidths=[0.5*inch, 6*inch])
+        
+        # Add table style
+        table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ]))
+        
+        content.append(table)
+        content.append(Spacer(1, 10))
     
-    # Create response with text file
-    response = make_response(content)
-    response.headers['Content-Type'] = 'text/plain'
-    response.headers['Content-Disposition'] = 'attachment; filename=grocery_list.txt'
+    # Build the PDF
+    doc.build(content)
+    
+    # Get the value of the BytesIO buffer
+    pdf = buffer.getvalue()
+    buffer.close()
+    
+    # Create response with PDF
+    response = make_response(pdf)
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = 'attachment; filename=grocery_list.pdf'
     
     return response
 
@@ -1022,6 +1258,85 @@ def logout():
     session.clear()
     flash("✅ You have been logged out.", "success")
     return redirect(url_for("login"))
+
+@app.route("/nutrition_monitor")
+def nutrition_monitor():
+    if "user_id" not in session:
+        flash("⚠️ Please log in to view nutrition data.", "error")
+        return redirect(url_for("login"))
+
+    period = request.args.get('period', 'daily')  # Get period from query params
+    
+    db = get_db_connection()
+    with db.cursor(pymysql.cursors.DictCursor) as cursor:
+        if period == 'monthly':
+            # Get last 30 days of nutrition data
+            cursor.execute("""
+                SELECT 
+                    DATE(saved_at) as date,
+                    SUM(CAST(calories AS DECIMAL)) as total_calories,
+                    SUM(CAST(protein AS DECIMAL)) as total_protein,
+                    SUM(CAST(fat AS DECIMAL)) as total_fat,
+                    SUM(CAST(carbohydrates AS DECIMAL)) as total_carbs,
+                    SUM(CAST(fiber AS DECIMAL)) as total_fiber
+                FROM saved_recipes 
+                WHERE user_id = %s 
+                AND saved_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                GROUP BY DATE(saved_at)
+                ORDER BY date
+            """, (session["user_id"],))
+        else:
+            # Get today's nutrition data
+            cursor.execute("""
+                SELECT 
+                    recipe_name,
+                    calories,
+                    protein,
+                    fat,
+                    carbohydrates,
+                    fiber,
+                    saved_at
+                FROM saved_recipes 
+                WHERE user_id = %s 
+                AND DATE(saved_at) = CURDATE()
+                ORDER BY saved_at
+            """, (session["user_id"],))
+        
+        nutrition_data = cursor.fetchall()
+
+        # Calculate totals and averages
+        if period == 'monthly':
+            totals = {
+                'calories': sum(day['total_calories'] for day in nutrition_data),
+                'protein': sum(day['total_protein'] for day in nutrition_data),
+                'fat': sum(day['total_fat'] for day in nutrition_data),
+                'carbs': sum(day['total_carbs'] for day in nutrition_data),
+                'fiber': sum(day['total_fiber'] for day in nutrition_data)
+            }
+            averages = {
+                'calories': totals['calories'] / len(nutrition_data) if nutrition_data else 0,
+                'protein': totals['protein'] / len(nutrition_data) if nutrition_data else 0,
+                'fat': totals['fat'] / len(nutrition_data) if nutrition_data else 0,
+                'carbs': totals['carbs'] / len(nutrition_data) if nutrition_data else 0,
+                'fiber': totals['fiber'] / len(nutrition_data) if nutrition_data else 0
+            }
+        else:
+            totals = {
+                'calories': sum(meal['calories'] for meal in nutrition_data),
+                'protein': sum(meal['protein'] for meal in nutrition_data),
+                'fat': sum(meal['fat'] for meal in nutrition_data),
+                'carbs': sum(meal['carbohydrates'] for meal in nutrition_data),
+                'fiber': sum(meal['fiber'] for meal in nutrition_data)
+            }
+            averages = totals  # For daily view, totals and averages are the same
+
+    db.close()
+
+    return render_template("nutrition_monitor.html",
+                         nutrition_data=nutrition_data,
+                         totals=totals,
+                         averages=averages,
+                         period=period)
 
 # Start Server
 if __name__ == "__main__":

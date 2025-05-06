@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="nutrition-monitor">
+    <div class="period-selector">
+        <h2>Nutrition Monitor</h2>
+        <div class="period-buttons">
+            <a href="{{ url_for('nutrition_monitor', period='daily') }}" 
+               class="btn {% if period == 'daily' %}active{% endif %}">Daily</a>
+            <a href="{{ url_for('nutrition_monitor', period='monthly') }}" 
+               class="btn {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+        </div>
+    </div>
+
+    <div class="nutrition-summary">
+        <div class="summary-card">
+            <h3>Total Calories</h3>
+            <p class="value">{{ "%.0f"|format(totals.calories) }}</p>
+            <p class="average">Avg: {{ "%.0f"|format(averages.calories) }}</p>
+        </div>
+        <div class="summary-card">
+            <h3>Protein (g)</h3>
+            <p class="value">{{ "%.1f"|format(totals.protein) }}</p>
+            <p class="average">Avg: {{ "%.1f"|format(averages.protein) }}</p>
+        </div>
+        <div class="summary-card">
+            <h3>Fat (g)</h3>
+            <p class="value">{{ "%.1f"|format(totals.fat) }}</p>
+            <p class="average">Avg: {{ "%.1f"|format(averages.fat) }}</p>
+        </div>
+        <div class="summary-card">
+            <h3>Carbs (g)</h3>
+            <p class="value">{{ "%.1f"|format(totals.carbs) }}</p>
+            <p class="average">Avg: {{ "%.1f"|format(averages.carbs) }}</p>
+        </div>
+        <div class="summary-card">
+            <h3>Fiber (g)</h3>
+            <p class="value">{{ "%.1f"|format(totals.fiber) }}</p>
+            <p class="average">Avg: {{ "%.1f"|format(averages.fiber) }}</p>
+        </div>
+    </div>
+
+    <div class="charts-container">
+        <div class="chart-card">
+            <h3>Nutrition Distribution</h3>
+            <canvas id="nutritionPieChart"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>{{ 'Daily' if period == 'daily' else 'Monthly' }} Trends</h3>
+            <canvas id="nutritionLineChart"></canvas>
+        </div>
+    </div>
+
+    {% if period == 'daily' %}
+    <div class="meal-list">
+        <h3>Today's Meals</h3>
+        <div class="meal-cards">
+            {% for meal in nutrition_data %}
+            <div class="meal-card">
+                <h4>{{ meal.recipe_name }}</h4>
+                <p class="time">{{ meal.saved_at.strftime('%I:%M %p') }}</p>
+                <div class="meal-nutrition">
+                    <span>Calories: {{ "%.0f"|format(meal.calories) }}</span>
+                    <span>Protein: {{ "%.1f"|format(meal.protein) }}g</span>
+                    <span>Fat: {{ "%.1f"|format(meal.fat) }}g</span>
+                    <span>Carbs: {{ "%.1f"|format(meal.carbohydrates) }}g</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var nutritionData = JSON.parse('{{ nutrition_data|tojson|safe }}');
+    var period = '{{ period }}';
+    var pieCtx = document.getElementById('nutritionPieChart').getContext('2d');
+    var lineCtx = document.getElementById('nutritionLineChart').getContext('2d');
+
+    // Pie Chart
+    var pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Calories', 'Protein', 'Fat', 'Fiber'],
+            datasets: [{
+                data: [
+                    {{ totals.calories|default(0)|round }},
+                    {{ totals.protein|default(0)|round(1) }}, 
+                    {{ totals.fat|default(0)|round(1) }},
+                    {{ totals.fiber|default(0)|round(1) }}
+                ],
+                backgroundColor: ['#4DB9C3', '#2ecc71', '#f1c40f', '#e74c3c']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Line Chart
+    var labels = [];
+    var data = [];
+
+    for (var i = 0; i < nutritionData.length; i++) {
+        var item = nutritionData[i];
+        if (period === 'daily') {
+            var date = new Date(item.saved_at);
+            labels.push(date.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            }));
+            data.push(parseFloat(item.calories));
+        } else {
+            var date = new Date(item.date);
+            labels.push(date.toLocaleDateString());
+            data.push(parseFloat(item.total_calories));
+        }
+    }
+
+    var lineChart = new Chart(lineCtx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Calories',
+                data: data,
+                borderColor: '#4DB9C3',
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.nutrition-monitor {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.period-selector {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.period-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.period-buttons .btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    background: var(--background-light);
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all var(--transition-speed) ease;
+}
+
+.period-buttons .btn.active {
+    background: var(--primary-color);
+    color: var(--light-text);
+}
+
+.nutrition-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    background: var(--background-light);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.summary-card h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.summary-card .value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.summary-card .average {
+    color: var(--text-color);
+    opacity: 0.7;
+    margin: 5px 0 0 0;
+}
+
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.chart-card {
+    background: var(--background-light);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.chart-card h3 {
+    margin: 0 0 20px 0;
+    color: var(--text-color);
+    text-align: center;
+}
+
+.meal-list {
+    margin-top: 30px;
+}
+
+.meal-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.meal-card {
+    background: var(--background-light);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.meal-card h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+}
+
+.meal-card .time {
+    color: var(--text-color);
+    opacity: 0.7;
+    margin: 0 0 15px 0;
+}
+
+.meal-nutrition {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.meal-nutrition span {
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+@media screen and (max-width: 768px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .nutrition-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .meal-cards {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %} 

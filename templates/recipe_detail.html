@@ -69,7 +69,7 @@
 
 <div class="recipe-actions">
     <form method="POST" action="{{ url_for('save_recipe') }}" class="action-form">
-        <input type="hidden" name="recipe_id" value="{{ recipe.idx }}">
+        <input type="hidden" name="recipe_data" value="{{ recipe|tojson }}">
         <button type="submit" class="btn save-btn">💾 Save Recipe</button>
     </form>
     <form method="POST" action="{{ url_for('add_to_grocery_list') }}" class="action-form">
