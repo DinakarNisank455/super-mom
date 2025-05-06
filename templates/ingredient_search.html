@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Recipe Recommender{% endblock %}
+
+{% block content %}
+<h2 style="text-align: center;">Search for Recipes</h2>
+
+<form method="get" action="{{ url_for('ingredient_search') }}">
+    <div class="search-container">
+        <input type="text" name="query" placeholder="Enter ingredients or recipe name" required>
+        <select style="width: 125px;" name="search_type">
+            <option value="name">By Name</option>
+            <option value="ingredients">By Ingredients</option>
+        </select>
+        <button style="width:200px;" class="btn" type="submit">Search</button>
+    </div>
+</form>
+
+<div class="toggle-container">
+    <button class="toggle-btn" onclick="toggleView()">🔄 Toggle View</button>
+</div>
+
+{% if recipes %}
+<div id="recipeResults" class="recipe-container grid-view">
+    {% for recipe in recipes %}
+    <div class="recipe-card">
+        <input type="checkbox" class="recipe-checkbox" data-ingredients="{{ recipe.ingredients|join(',') }}">
+        <img src="{{ recipe.image }}" alt="Image"><br>
+        <h3>{{ recipe.name }}</h3>
+        <p><strong>Calories:</strong> {{ recipe.nutrition.calories|round }} kcal</p>
+        <p><strong>Protein:</strong> {{ recipe.nutrition.protein|round(1) }} g</p>
+        <p><strong>Fat:</strong> {{ recipe.nutrition.fat|round(1) }} g</p>
+        <a href="{{ url_for('recipe_detail', recipe_id=loop.index0) }}" class="btn">View Details</a>
+    </div>
+    {% endfor %}
+</div>
+{% elif search_performed %}
+<p style="text-align: center;">🔎 No recipes found. Try another search!</p>
+{% endif %}
+
+<script>
+    function toggleView() {
+        const container = document.getElementById("recipeResults");
+        container.classList.toggle("grid-view");
+        container.classList.toggle("list-view");
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Recipes{% endblock %}
+
+{% block content %}
+<h1>🍽️ Your Saved Recipes</h1>
+
+<form action="{{ url_for('generate_grocery_list') }}" method="POST">
+    {% for recipe in recipes %}
+    <div class="recipe-card">
+        <label>{{ recipe['recipe_name'] }}</label>
+        <img src="{{ recipe.image }}" alt="Recipe Image" width="300px" style="border-radius: 10px; margin-bottom: 20px;">
+
+    </div>
+    {% endfor %}
+</form>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Search by Nutrition - Personal Recipe Recommender{% endblock %}
+
+{% block content %}
+<h2>🔍 Search Recipes by Nutrition Requirements</h2>
+
+<form method="POST" class="form-card">
+    <div class="form-row">
+        <label>Search Keyword:</label>
+        <input type="text" name="query" placeholder="E.g., chicken, salad, pasta">
+    </div>
+    <div class="form-grid">
+        <div>
+            <label>Calories (Min - Max):</label>
+            <input type="number" name="min_calories" placeholder="Min" step="any">
+            <input type="number" name="max_calories" placeholder="Max" step="any">
+        </div>
+        <div>
+            <label>Protein (Min - Max) (g):</label>
+            <input type="number" name="min_protein" placeholder="Min" step="any">
+            <input type="number" name="max_protein" placeholder="Max" step="any">
+        </div>
+        <div>
+            <label>Fat (Min - Max) (g):</label>
+            <input type="number" name="min_fat" placeholder="Min" step="any">
+            <input type="number" name="max_fat" placeholder="Max" step="any">
+        </div>
+        <div>
+            <label>Carbohydrates (Min - Max) (g):</label>
+            <input type="number" name="min_carbs" placeholder="Min" step="any">
+            <input type="number" name="max_carbs" placeholder="Max" step="any">
+        </div>
+        <div>
+            <label>Fiber (Min - Max) (g):</label>
+            <input type="number" name="min_fibers" placeholder="Min" step="any">
+            <input type="number" name="max_fibers" placeholder="Max" step="any">
+        </div>
+    </div>
+
+    <div class="form-row" style="text-align: center;">
+        <button class="btn" type="submit">🔎 Search Recipes</button>
+    </div>
+</form>
+
+<hr>
+
+{% if recipes %}
+<h3>📋 Search Results:</h3>
+
+<div class="grid-container">
+    {% for recipe in recipes %}
+    <div class="card">
+        <img src="{{ recipe.image }}" alt="{{ recipe.name }}" width="100%" style="border-radius: 10px;">
+        <h4>{{ recipe.name }}</h4>
+        <p><strong>Calories:</strong> {{ recipe.nutrition.calories|round }} kcal</p>
+        <p><strong>Protein:</strong> {{ recipe.nutrition.protein|round(1) }} g</p>
+        <p><strong>Fat:</strong> {{ recipe.nutrition.fat|round(1) }} g</p>
+        <p><strong>Carbs:</strong> {{ recipe.nutrition.carbohydrates|round(1) }} g</p>
+        <p><strong>Fibers:</strong> {{ recipe.nutrition.fibers|round(1) }} g</p>
+        <a href="{{ url_for('recipe_detail', recipe_id=loop.index0) }}" class="btn">🍳 View Recipe</a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+        <p style="text-align: center;">🔎 No recipes found. Try another search!</p>
+{% endif %}
+
+{% endblock %}

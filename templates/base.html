@@ -7,6 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Recipe Recommender{% endblock %}</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <script src="{{ url_for('static', filename='static/script.js') }}"></script>
+
 </head>
 
 <body>
@@ -20,6 +22,7 @@
             <li><a href="/">Home</a></li>
             <li><a href="/dashboard">Dashboard</a></li>
             <li><a href="/recipe_search">Recipes</a></li>
+            <li><a href="{{ url_for('saved_recipes') }}">Saved Recipes</a></li>
             <li><a href="/logout">Logout</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>

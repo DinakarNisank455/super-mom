@@ -1,9 +1,10 @@
 <!-- register page.html -->
 {% extends "base.html" %}
 
-{% block title %}Welcome - Recipe Recommender{% endblock %}
+{% block title %}Personal Recipe Recommender{% endblock %}
 
 {% block content %}
+<form action="/login" method="POST">
     <div class="form-container">
         <div class="form-title">REGISTER</div>
 
@@ -22,13 +23,18 @@
             <input type="password" placeholder="Enter your password">
         </div>
 
+        <div class="input-group">
+            <label>Confirm Password</label>
+            <input type="Confirm_password" placeholder="Confirm your password">
+        </div>
+
         <div class="checkbox-group">
-            GYM MEMBER <input type="checkbox">
+            GYM MEMBER <input type="checkbox" name="gym_member">
         </div>
 
         <div class="input-group select-group">
             <label>Select Diet Plan</label>
-            <select>
+            <select name="diet_plan">
                 <option>Select</option>
                 <option>Weight Loss</option>
                 <option>Muscle Gain</option>
@@ -54,6 +60,8 @@
         </div>
 
         <button class="btn">REGISTER</button>
-        <p>already have a account ?<a href="/login"> Sign in</a></p>
+        
+        <p style="margin-top: 25px;">already have a account ?<a href="/login" style="margin-left: 5px;" class="btn"> Login</a></p>
     </div>
+</form>
 {% endblock %}

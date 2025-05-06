@@ -3,46 +3,37 @@
 {% block title %}Personal Recipe Recommender{% endblock %}
 
 {% block content %}
-<h2 style="text-align: center;">🔍 Search for Recipes</h2>
+<<h2 class="page-title">🔍 Choose Your Search Method</h2>
 
-<form method="get" action="{{ url_for('recipe_search') }}">
-    <div class="search-container">
-        <p>🔍</p>
-        <input type="text" name="query" placeholder="Enter ingredients or recipe name" required>
-        <select name="search_type">
-            <option value="name">By Name</option>
-            <option value="ingredients">By Ingredients</option>
-        </select>
-        <button class="btn" type="submit">Search</button>
+<div class="grid-container" style="gap: 30px;">
+
+    <!-- Nutrition Search Card -->
+    <div class="grid-item">
+        <div class="card" style="text-align: center;">
+            <h3>🥑 Search by Nutrition</h3>
+            <p>Find recipes based on your nutrition needs (calories, proteins, fats, etc.).</p>
+            <form action="{{ url_for('select_search') }}" method="POST" style="margin-top: 20px;">
+                <input type="hidden" name="search_type" value="nutrition">
+                <button class="btn" type="submit">Start Nutrition Search</button>
+            </form>
+        </div>
     </div>
-</form>
 
-<div class="toggle-container">
-    <button class="toggle-btn" onclick="toggleView()">🔄 Toggle View</button>
+    <!-- Ingredient Search Card -->
+    <div class="grid-item">
+        <div class="card" style="text-align: center;">
+            <h3>🍅 Search by Ingredients</h3>
+            <p>Find recipes based on the ingredients you have at home.</p>
+            <form action="{{ url_for('select_search') }}" method="POST" style="margin-top: 20px;">
+                <input type="hidden" name="search_type" value="ingredient">
+                <button class="btn" type="submit">Start Ingredient Search</button>
+            </form>
+        </div>
+    </div>
+
 </div>
 
-{% if recipes %}
-<div id="recipeResults" class="recipe-container grid-view">
-    {% for recipe in recipes %}
-    <div class="recipe-card">
-        <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
-        <h3>{{ recipe.name }}</h3>
-        <p><strong>Calories:</strong> {{ recipe.nutrition.calories|round }} kcal</p>
-        <p><strong>Protein:</strong> {{ recipe.nutrition.protein|round(1) }} g</p>
-        <p><strong>Fat:</strong> {{ recipe.nutrition.fat|round(1) }} g</p>
-        <a href="{{ url_for('recipe_detail', recipe_id=loop.index0) }}" class="btn">View Details</a>
-    </div>
-    {% endfor %}
-</div>
-{% else %}
-<p style="text-align: center;">🔎 No recipes found. Try another search!</p>
-{% endif %}
+<a href="{{ url_for('home') }}" class="back-link">⬅ Back to Home</a>
 
-<script>
-    function toggleView() {
-        const container = document.getElementById("recipeResults");
-        container.classList.toggle("grid-view");
-        container.classList.toggle("list-view");
-    }
-</script>
+
 {% endblock %}

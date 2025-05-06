@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Grocery List{% endblock %}
+
+{% block content %}
+<h1>🛒 Grocery List</h1>
+
+<ul class="grocery-list">
+    {% for item in grocery_list %}
+    <li>{{ item }}</li>
+    {% endfor %}
+</ul>
+
+<form action="{{ url_for('download_grocery_list') }}" method="POST">
+    <input type="hidden" name="grocery_list" value="{{ grocery_list | tojson }}">
+    <button type="submit" class="btn">Download Grocery List</button>
+</form>
+{% endblock %}

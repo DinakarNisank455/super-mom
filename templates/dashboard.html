@@ -1,27 +1,116 @@
-<!-- dashboard.html -->
-{% extends "base.html" %}
+    {% extends "base.html" %}
 
-{% block title %}Dashboard - Recipe Recommender{% endblock %}
+    {% block title %}Dashboard - Recipe Recommender{% endblock %}
 
-{% block content %}
-<h1>Welcome to Your Dashboard</h1>
+    {% block content %}
+    <h1 style="text-align: center;">🍽️ Welcome to Your Dashboard</h1>
 
-<!-- Nutrition Tracking Section -->
-<h2>Your Nutrition Intake</h2>
-<div>
-<select id="nutrition-period">
-    <option value="daily">Daily</option>
-    <option value="monthly">Monthly</option>
-</select>
-    <button onclick="fetchNutrition()">View</button>
-</div>
-<canvas id="nutritionChart"></canvas>
+    <!-- Nutrition Tracking Section -->
+    <section>
+        <h2 style="text-align: center;">🥗 Your Nutrition Intake</h2>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <select id="nutrition-period">
+                <option value="daily">Daily</option>
+                <option value="monthly">Monthly</option>
+            </select>
+            <button class="btn" onclick="fetchNutrition()">View</button>
+        </div>
+        <div style="width: 100%; max-width: 700px; margin: 0 auto;">
+            <canvas id="nutritionChart"></canvas>
+        </div>
+    </section>
 
-<h2>Meal History</h2>
-<select id="meal-period">
-    <option value="daily">Daily</option>
-    <option value="monthly">Monthly</option>
-</select>
-<button onclick="fetchMealHistory()">View</button>
-<div id="meal-history"></div>
-{% endblock %}
+    <!-- Meal History Section -->
+    <section>
+        <h2 style="text-align: center;">🍛 Meal History</h2>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <select id="history-period">
+                <option value="daily">Daily</option>
+                <option value="monthly">Monthly</option>
+            </select>
+            <button class="btn" onclick="fetchMealHistory()">View</button>
+        </div>
+        <div id="meal-history" class="recipe-container"></div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        function fetchNutrition() {
+            const period = document.getElementById("nutrition-period").value;
+            fetch(`/api/nutrition?period=${period}`)
+                .then(res => res.json())
+                .then(data => {
+                    const ctx = document.getElementById('nutritionChart').getContext('2d');
+                    if (window.nutritionChart && typeof window.nutritionChart.destroy === 'function') {
+                        window.nutritionChart.destroy();
+                    }
+                    window.nutritionChart = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Calories', 'Protein (g)', 'Fat (g)'],
+                            datasets: [{
+                                label: `Your ${period} Nutrition Intake`,
+                                data: [data.calories, data.protein, data.fat],
+                                backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
+                            }]
+                        }
+                    });
+                });
+        }
+
+        function fetchMealHistory() {
+                const periodElement = document.getElementById("history-period");
+                if (!periodElement) {
+                    console.error('Element with id "history-period" not found');
+                    return;
+                }
+
+                const period = periodElement.value;
+                fetch(`/api/meal-history?period=${period}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Network response was not ok: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.error) {
+                            console.error("Error from backend:", data.error);
+                            alert('There was an issue fetching your meal history. Please try again later.');
+                        } else {
+                            // Handle the meal history data here
+                            console.log("Meal history data:", data);
+                            // Render the recipe cards on the UI
+                            renderMealHistory(data.recipes);
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching meal history:", error);
+                        alert('There was an issue fetching your meal history. Please try again later.');
+                    });
+            }
+
+            function renderMealHistory(recipes) {
+                const mealHistoryContainer = document.getElementById('meal-history');
+                mealHistoryContainer.innerHTML = '';  // Clear any previous content
+
+                if (recipes && recipes.length > 0) {
+                    recipes.forEach(recipe => {
+                        const recipeCard = document.createElement('div');
+                        recipeCard.classList.add('recipe-card');
+                        recipeCard.innerHTML = `
+                    <h3>${recipe.recipe_name}</h3>
+                    <p>Calories: ${recipe.calories}</p>
+                    <p>Saved At: ${new Date(recipe.saved_at).toLocaleString()}</p>
+                `;
+                        mealHistoryContainer.appendChild(recipeCard);
+                    });
+                } else {
+                    mealHistoryContainer.innerHTML = "<p>No meal history found for the selected period.</p>";
+                }
+            }
+
+
+    </script>   
+    {% endblock %}
