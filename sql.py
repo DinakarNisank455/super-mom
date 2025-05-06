@@ -77,7 +77,7 @@ def get_recipe_nutrition(ingredient):
     
     if 'hits' in data and len(data['hits']) > 0:
         recipe = data['hits'][0]['recipe']
-        name = recipe['label']
+        name = recipe['label']  
         calories = recipe['calories']
         protein = recipe['totalNutrients'].get('PROCNT', {}).get('quantity', 0)
         carbs = recipe['totalNutrients'].get('CHOCDF', {}).get('quantity', 0)

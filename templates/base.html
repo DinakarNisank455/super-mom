@@ -6,16 +6,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Recipe Recommender{% endblock %}</title>
-    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="{{ url_for('static', filename='static/script.js') }}"></script>
+
 </head>
 
 <body>
     <nav class="navbar">
-        <img scr="static/image/logo" class="logo">
+    
+        <div>
+            <img src="static/image/logo.png" class="logo" alt="Logo">
+        </div>
         <ul class="nav-links">
+            {% if 'user_id' in session %}
             <li><a href="/">Home</a></li>
             <li><a href="/dashboard">Dashboard</a></li>
-            {% if 'user_id' in session %}
+            <li><a href="/recipe_search">Recipes</a></li>
+            <li><a href="{{ url_for('saved_recipes') }}">Saved Recipes</a></li>
             <li><a href="/logout">Logout</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>
@@ -24,7 +31,7 @@
         </ul>
     </nav>
 
-    <div class="container">
+    <div class="body">
         {% block content %}{% endblock %}
     </div>
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -36,6 +43,9 @@
     {% endfor %}
     {% endif %}
     {% endwith %}
+    <div class="footer">
+        <p>Copyrights @2025 are owned by personal_recipe_recommender</p>
+    </div>
 
 </body>
 

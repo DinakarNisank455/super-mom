@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Recipe Recommender{% endblock %}
+
+{% block content %}
+<h2>{{ recipe.name }}</h2>
+
+<img src="{{ recipe.image }}" alt="Recipe Image" width="300px" style="border-radius: 10px; margin-bottom: 20px;">
+
+<div class="grid-container">
+
+    <!-- Nutrition Section -->
+    <div class="grid-item">
+        <div class="card">
+            <h4>🍽️ Nutrition Info</h4>
+            <ul class="nutrition-list">
+                <li><strong>Diet Type:</strong> {{ recipe.diet_type }}</li>
+                <li><strong>Calories:</strong> {{ recipe.nutrition.calories|default(0)|round }} kcal</li>
+                <li><strong>Protein:</strong> {{ recipe.nutrition.protein|default(0)|round(1) }} g</li>
+                <li><strong>Fat:</strong> {{ recipe.nutrition.fat|default(0)|round(1) }} g</li>
+                <li><strong>Carbohydrates:</strong> {{ recipe.nutrition.carbohydrates|default(0)|round(1) }} g</li>
+                <li><strong>Fibers:</strong> {{ recipe.nutrition.fibers|default(0)|round(1) }} g</li>
+
+            </ul>
+        </div>
+    </div>
+
+    <!-- Video Section -->
+    <div class="grid-item">
+        <div class="card">
+            <h4>📺 Recipe Video</h4>
+            {% if youtube_video %}
+            <iframe width="100%" height="250" src="{{ youtube_video }}" frameborder="0" allowfullscreen
+                style="border-radius: 10px;"></iframe>
+            {% else %}
+            <p>No video available for this recipe.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Ingredients Section -->
+    <div class="grid-item">
+        <div class="card">
+            <h4>🧂 Ingredients</h4>
+            <ul class="ingredient-list">
+                {% for item in recipe.ingredients %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+<!-- Save Recipe Button -->
+<div>
+    <form method="POST" action="{{ url_for('save_recipe') }}">
+        <input type="hidden" name="name" value="{{ recipe.name }}">
+        <input type="hidden" name="image" value="{{ recipe.image }}">
+        <input type="hidden" name="url" value="{{ recipe.recipe_link }}">
+        <input type="hidden" name="diet_type" value="{{ recipe.diet_type }}">
+        <input type="hidden" name="ingredients" value="{{ recipe.ingredients | join(', ') }}">
+        <input type="hidden" name="calories" value="{{ recipe.nutrition.calories }}">
+        <input type="hidden" name="protein" value="{{ recipe.nutrition.protein }}">
+        <input type="hidden" name="fat" value="{{ recipe.nutrition.fat }}">
+        <input type="hidden" name="carbohydrates" value="{{ recipe.nutrition.carbohydrates }}">
+        <input type="hidden" name="fibers" value="{{ recipe.nutrition.fibers }}">
+        <button class="btn" type="submit">💾 Save Recipe</button>
+    </form>
+</div>
+
+
+{% endblock %}

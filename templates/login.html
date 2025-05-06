@@ -4,15 +4,35 @@
 {% block title %}Login - Recipe Recommender{% endblock %}
 
 {% block content %}
-<section class="container">
-    <div class="login-box">
-        <h2>Login</h2>
-        <form action="/login" method="POST">
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-        <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+<!-- Login Form -->
+<form action="/login" method="POST">
+    <div class="form-container">
+        <div class="form-title">Login</div>
+
+        <div class="input-group">
+            <label>Email</label>
+            <input type="email" name="email" placeholder="Email">
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" name="password" placeholder="Password">
+        </div>
+
+        <button type="submit" name="login-button" class="btn" id="login-button">Sign In</button>
+
+        <div class="forgot-password">
+            <a href="/forgot_password">Forgot password?</a>
+        </div>
     </div>
-</section>
+</form>
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="alert">
+    {{ messages[0] }}
+</div>
+{% endif %}
+{% endwith %}
+
 {% endblock %}

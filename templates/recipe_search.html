@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Recipe Recommender{% endblock %}
+
+{% block content %}
+<<h2 class="page-title">🔍 Choose Your Search Method</h2>
+
+<div class="grid-container" style="gap: 30px;">
+
+    <!-- Nutrition Search Card -->
+    <div class="grid-item">
+        <div class="card" style="text-align: center;">
+            <h3>🥑 Search by Nutrition</h3>
+            <p>Find recipes based on your nutrition needs (calories, proteins, fats, etc.).</p>
+            <form action="{{ url_for('select_search') }}" method="POST" style="margin-top: 20px;">
+                <input type="hidden" name="search_type" value="nutrition">
+                <button class="btn" type="submit">Start Nutrition Search</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ingredient Search Card -->
+    <div class="grid-item">
+        <div class="card" style="text-align: center;">
+            <h3>🍅 Search by Ingredients</h3>
+            <p>Find recipes based on the ingredients you have at home.</p>
+            <form action="{{ url_for('select_search') }}" method="POST" style="margin-top: 20px;">
+                <input type="hidden" name="search_type" value="ingredient">
+                <button class="btn" type="submit">Start Ingredient Search</button>
+            </form>
+        </div>
+    </div>
+
+</div>
+
+<a href="{{ url_for('home') }}" class="back-link">⬅ Back to Home</a>
+
+
+{% endblock %}
