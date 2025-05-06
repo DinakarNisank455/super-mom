@@ -5,10 +5,27 @@
 {% block content %}
 <h2>{{ recipe.name }}</h2>
 
+<!-- Allergen Warning Section -->
+{% if recipe.allergens %}
+<div class="allergen-warning">
+    <div class="warning-header">
+        <span class="warning-icon">⚠️</span>
+        <h3>Allergen Warning</h3>
+    </div>
+    <div class="allergen-list">
+        <p>This recipe contains the following allergens:</p>
+        <ul>
+            {% for allergen in recipe.allergens %}
+            <li>{{ allergen }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
 <img src="{{ recipe.image }}" alt="Recipe Image" width="300px" style="border-radius: 10px; margin-bottom: 20px;">
 
 <div class="grid-container">
-
     <!-- Nutrition Section -->
     <div class="grid-item">
         <div class="card">
@@ -20,7 +37,6 @@
                 <li><strong>Fat:</strong> {{ recipe.nutrition.fat|default(0)|round(1) }} g</li>
                 <li><strong>Carbohydrates:</strong> {{ recipe.nutrition.carbohydrates|default(0)|round(1) }} g</li>
                 <li><strong>Fibers:</strong> {{ recipe.nutrition.fibers|default(0)|round(1) }} g</li>
-
             </ul>
         </div>
     </div>
@@ -50,22 +66,101 @@
         </div>
     </div>
 </div>
-<!-- Save Recipe Button -->
-<div>
-    <form method="POST" action="{{ url_for('save_recipe') }}">
-        <input type="hidden" name="name" value="{{ recipe.name }}">
-        <input type="hidden" name="image" value="{{ recipe.image }}">
-        <input type="hidden" name="url" value="{{ recipe.recipe_link }}">
-        <input type="hidden" name="diet_type" value="{{ recipe.diet_type }}">
-        <input type="hidden" name="ingredients" value="{{ recipe.ingredients | join(', ') }}">
-        <input type="hidden" name="calories" value="{{ recipe.nutrition.calories }}">
-        <input type="hidden" name="protein" value="{{ recipe.nutrition.protein }}">
-        <input type="hidden" name="fat" value="{{ recipe.nutrition.fat }}">
-        <input type="hidden" name="carbohydrates" value="{{ recipe.nutrition.carbohydrates }}">
-        <input type="hidden" name="fibers" value="{{ recipe.nutrition.fibers }}">
-        <button class="btn" type="submit">💾 Save Recipe</button>
+
+<div class="recipe-actions">
+    <form method="POST" action="{{ url_for('save_recipe') }}" class="action-form">
+        <input type="hidden" name="recipe_id" value="{{ recipe.idx }}">
+        <button type="submit" class="btn save-btn">💾 Save Recipe</button>
+    </form>
+    <form method="POST" action="{{ url_for('add_to_grocery_list') }}" class="action-form">
+        <input type="hidden" name="recipe_id" value="{{ recipe.idx }}">
+        <button type="submit" class="btn grocery-btn">🛒 Add to Grocery List</button>
     </form>
 </div>
 
+<style>
+.recipe-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.action-form {
+    flex: 1;
+}
+
+.save-btn, .grocery-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.save-btn {
+    background: linear-gradient(135deg, #4DB9C3 0%, #0B4B57 100%);
+    color: white;
+}
+
+.grocery-btn {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+}
+
+.save-btn:hover, .grocery-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.allergen-warning {
+    background: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 20px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.warning-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.warning-icon {
+    font-size: 1.5rem;
+}
+
+.warning-header h3 {
+    margin: 0;
+    color: #856404;
+}
+
+.allergen-list {
+    color: #666;
+}
+
+.allergen-list ul {
+    list-style-type: none;
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.allergen-list li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 5px;
+}
+
+.allergen-list li:before {
+    content: "•";
+    color: #856404;
+    position: absolute;
+    left: 0;
+}
+</style>
 
 {% endblock %}

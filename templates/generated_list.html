@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}Generated Grocery List - Personal Recipe Recommender{% endblock %}
+
+{% block content %}
+<div class="generated-list-container">
+    <h2>📋 Your Generated Grocery List</h2>
+
+    <div class="list-content">
+        <div class="list-header">
+            <h3>Ingredients Needed</h3>
+            <div class="list-actions">
+                <form method="GET" action="{{ url_for('download_grocery_list') }}" class="action-form">
+                    <button type="submit" class="btn download-btn">⬇️ Download List</button>
+                </form>
+                <a href="{{ url_for('grocery_list') }}" class="btn back-btn">← Back to Recipes</a>
+            </div>
+        </div>
+
+        <div class="ingredients-list">
+            {% for category, ingredients in categorized_ingredients.items() %}
+            <div class="category-section">
+                <h4>{{ category }}</h4>
+                <ul>
+                    {% for ingredient in ingredients %}
+                    <li>
+                        <span class="ingredient-name">{{ ingredient.name }}</span>
+                        <span class="ingredient-quantity">{{ ingredient.quantity }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="recipe-summary">
+            <h4>Recipes Included:</h4>
+            <ul>
+                {% for recipe in recipes %}
+                <li>{{ recipe.name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<style>
+.generated-list-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.list-content {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.list-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.action-form {
+    margin: 0;
+}
+
+.download-btn, .back-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+}
+
+.back-btn {
+    background: linear-gradient(135deg, #4DB9C3 0%, #0B4B57 100%);
+    color: white;
+}
+
+.download-btn:hover, .back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.ingredients-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.category-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.category-section h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4DB9C3;
+}
+
+.category-section ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.category-section li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.category-section li:last-child {
+    border-bottom: none;
+}
+
+.ingredient-name {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.ingredient-quantity {
+    color: #666;
+}
+
+.recipe-summary {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.recipe-summary h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4DB9C3;
+}
+
+.recipe-summary ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.recipe-summary li {
+    color: #666;
+    padding: 5px 0;
+}
+
+@media screen and (max-width: 768px) {
+    .list-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .list-actions {
+        flex-direction: column;
+    }
+
+    .ingredients-list {
+        grid-template-columns: 1fr;
+    }
+
+    .recipe-summary ul {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

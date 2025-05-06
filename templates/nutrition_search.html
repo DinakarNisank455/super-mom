@@ -58,11 +58,11 @@
         <p><strong>Fat:</strong> {{ recipe.nutrition.fat|round(1) }} g</p>
         <p><strong>Carbs:</strong> {{ recipe.nutrition.carbohydrates|round(1) }} g</p>
         <p><strong>Fibers:</strong> {{ recipe.nutrition.fibers|round(1) }} g</p>
-        <a href="{{ url_for('recipe_detail', recipe_id=loop.index0) }}" class="btn">🍳 View Recipe</a>
+        <a href="{{ url_for('recipe_detail', recipe_id=recipe.idx) }}" class="btn">🍳 View Recipe</a>
     </div>
     {% endfor %}
 </div>
-{% else %}
+{% elif search_performed %}
         <p style="text-align: center;">🔎 No recipes found. Try another search!</p>
 {% endif %}
 

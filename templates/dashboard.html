@@ -1,116 +1,322 @@
-    {% extends "base.html" %}
+{% extends "base.html" %}
 
-    {% block title %}Dashboard - Recipe Recommender{% endblock %}
+{% block title %}Personal Recipe Recommender{% endblock %}
 
-    {% block content %}
-    <h1 style="text-align: center;">🍽️ Welcome to Your Dashboard</h1>
+{% block content %}
+<div class="dashboard-container">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <h2>👋 Welcome, {{ user[1] }}</h2>
+        <p class="welcome-message">Your personal recipe companion is ready to help you discover delicious meals!</p>
+    </div>
 
-    <!-- Nutrition Tracking Section -->
-    <section>
-        <h2 style="text-align: center;">🥗 Your Nutrition Intake</h2>
-        <div style="text-align: center; margin-bottom: 20px;">
-            <select id="nutrition-period">
-                <option value="daily">Daily</option>
-                <option value="monthly">Monthly</option>
-            </select>
-            <button class="btn" onclick="fetchNutrition()">View</button>
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{{ url_for('recipe_search') }}" class="action-card">
+            <span class="action-icon">🔍</span>
+            <span class="action-text">Search Recipes</span>
+        </a>
+        <a href="{{ url_for('saved_recipes') }}" class="action-card">
+            <span class="action-icon">📚</span>
+            <span class="action-text">Saved Recipes</span>
+        </a>
+        <a href="{{ url_for('grocery_list') }}" class="action-card">
+            <span class="action-icon">🛒</span>
+            <span class="action-text">Grocery List</span>
+        </a>
+        <a href="{{ url_for('profile') }}" class="action-card">
+            <span class="action-icon">👤</span>
+            <span class="action-text">Profile</span>
+        </a>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="stats-section">
+        <div class="stat-card">
+            <span class="stat-icon">📚</span>
+            <div class="stat-info">
+                <span class="stat-value">{{ saved_recipes_count }}</span>
+                <span class="stat-label">Saved Recipes</span>
+            </div>
         </div>
-        <div style="width: 100%; max-width: 700px; margin: 0 auto;">
-            <canvas id="nutritionChart"></canvas>
+        <div class="stat-card">
+            <span class="stat-icon">🛒</span>
+            <div class="stat-info">
+                <span class="stat-value">{{ grocery_list_count }}</span>
+                <span class="stat-label">Grocery Lists</span>
+            </div>
         </div>
-    </section>
-
-    <!-- Meal History Section -->
-    <section>
-        <h2 style="text-align: center;">🍛 Meal History</h2>
-        <div style="text-align: center; margin-bottom: 20px;">
-            <select id="history-period">
-                <option value="daily">Daily</option>
-                <option value="monthly">Monthly</option>
-            </select>
-            <button class="btn" onclick="fetchMealHistory()">View</button>
+        <div class="stat-card">
+            <span class="stat-icon">🍽️</span>
+            <div class="stat-info">
+                <span class="stat-value">{{ total_calories|round }}</span>
+                <span class="stat-label">Total Calories</span>
+            </div>
         </div>
-        <div id="meal-history" class="recipe-container"></div>
-    </section>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Recent Activity -->
+    <div class="recent-activity">
+        <h3>Recent Activity</h3>
+        <div class="activity-list">
+            {% if recent_activity %}
+                {% for activity in recent_activity %}
+                <div class="activity-item">
+                    <span class="activity-icon">{{ activity[3] }}</span>
+                    <div class="activity-content">
+                        <span class="activity-text">{{ activity[1] }}</span>
+                        <span class="activity-time">{{ activity[2] }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="no-activity">No recent activity</p>
+            {% endif %}
+        </div>
+    </div>
 
-    <script>
-        function fetchNutrition() {
-            const period = document.getElementById("nutrition-period").value;
-            fetch(`/api/nutrition?period=${period}`)
-                .then(res => res.json())
-                .then(data => {
-                    const ctx = document.getElementById('nutritionChart').getContext('2d');
-                    if (window.nutritionChart && typeof window.nutritionChart.destroy === 'function') {
-                        window.nutritionChart.destroy();
-                    }
-                    window.nutritionChart = new Chart(ctx, {
-                        type: 'pie',
-                        data: {
-                            labels: ['Calories', 'Protein (g)', 'Fat (g)'],
-                            datasets: [{
-                                label: `Your ${period} Nutrition Intake`,
-                                data: [data.calories, data.protein, data.fat],
-                                backgroundColor: ['#ff6384', '#36a2eb', '#ffce56']
-                            }]
-                        }
-                    });
-                });
-        }
+    <!-- Recipe Categories -->
+    <div class="recipe-categories">
+        <h3>Popular Categories</h3>
+        <div class="category-grid">
+            <a href="{{ url_for('ingredient_search') }}?diet_filter=high-protein" class="category-card">
+                <span class="category-icon">💪</span>
+                <span class="category-name">High Protein</span>
+            </a>
+            <a href="{{ url_for('ingredient_search') }}?diet_filter=low-carb" class="category-card">
+                <span class="category-icon">🥗</span>
+                <span class="category-name">Low Carb</span>
+            </a>
+            <a href="{{ url_for('ingredient_search') }}?diet_filter=balanced" class="category-card">
+                <span class="category-icon">⚖️</span>
+                <span class="category-name">Balanced</span>
+            </a>
+            <a href="{{ url_for('ingredient_search') }}?diet_filter=high-fiber" class="category-card">
+                <span class="category-icon">🌾</span>
+                <span class="category-name">High Fiber</span>
+            </a>
+        </div>
+    </div>
+</div>
 
-        function fetchMealHistory() {
-                const periodElement = document.getElementById("history-period");
-                if (!periodElement) {
-                    console.error('Element with id "history-period" not found');
-                    return;
-                }
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
 
-                const period = periodElement.value;
-                fetch(`/api/meal-history?period=${period}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Network response was not ok: ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.error) {
-                            console.error("Error from backend:", data.error);
-                            alert('There was an issue fetching your meal history. Please try again later.');
-                        } else {
-                            // Handle the meal history data here
-                            console.log("Meal history data:", data);
-                            // Render the recipe cards on the UI
-                            renderMealHistory(data.recipes);
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Error fetching meal history:", error);
-                        alert('There was an issue fetching your meal history. Please try again later.');
-                    });
-            }
+.welcome-section {
+    text-align: center;
+    margin-bottom: 40px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
 
-            function renderMealHistory(recipes) {
-                const mealHistoryContainer = document.getElementById('meal-history');
-                mealHistoryContainer.innerHTML = '';  // Clear any previous content
+.welcome-message {
+    color: #666;
+    font-size: 1.1rem;
+    margin-top: 10px;
+}
 
-                if (recipes && recipes.length > 0) {
-                    recipes.forEach(recipe => {
-                        const recipeCard = document.createElement('div');
-                        recipeCard.classList.add('recipe-card');
-                        recipeCard.innerHTML = `
-                    <h3>${recipe.recipe_name}</h3>
-                    <p>Calories: ${recipe.calories}</p>
-                    <p>Saved At: ${new Date(recipe.saved_at).toLocaleString()}</p>
-                `;
-                        mealHistoryContainer.appendChild(recipeCard);
-                    });
-                } else {
-                    mealHistoryContainer.innerHTML = "<p>No meal history found for the selected period.</p>";
-                }
-            }
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
 
+.action-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 16px;
+    text-align: center;
+    text-decoration: none;
+    color: #2c3e50;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
 
-    </script>   
-    {% endblock %}
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.action-icon {
+    font-size: 2.5rem;
+}
+
+.action-text {
+    font-size: 1.2rem;
+    font-weight: 500;
+}
+
+.stats-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 1rem;
+}
+
+.recent-activity {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 16px;
+    margin-bottom: 40px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.recent-activity h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4DB9C3;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+}
+
+.activity-content {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.activity-text {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.activity-time {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.recipe-categories {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.recipe-categories h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4DB9C3;
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.category-card {
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+    text-align: center;
+    text-decoration: none;
+    color: #2c3e50;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.category-icon {
+    font-size: 2rem;
+}
+
+.category-name {
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.no-activity {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
+@media screen and (max-width: 768px) {
+    .dashboard-container {
+        padding: 10px;
+    }
+
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-section {
+        grid-template-columns: 1fr;
+    }
+
+    .category-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

@@ -1,4 +1,3 @@
-
 /* General Styles */
 body {
       background: linear-gradient(180deg, #0B4B57 0%, #4DB9C3 100%),
@@ -523,76 +522,360 @@ body {
 .search-container {
     display: flex;
     align-items: center;
-    background: #000;
-    height:50px;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.8);
+    height: 50px;
     border-radius: 20px;
     padding: 5px 10px;
-    width:  600px;
-    margin-top: 20px;
+    width: 600px;
+    margin: 20px auto;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .search-container input {
-
     border: none;
     background: transparent;
     flex: 1;
     padding: 10px;
     outline: none;
     font-size: 1em;
-    color: #333;
+    color: white;
     align-items: center;
+    min-width: 200px;
 }
-.search-container select{
+
+.search-container input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.search-container select {
     margin: 2px;
     border-radius: 10px;
-}
-.search-container .search-icon {
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    padding: 5px;
+    color: #333;
     cursor: pointer;
+    min-width: 120px;
+    height: 35px;
 }
 
+.search-container .btn {
+    background: linear-gradient(135deg, #4DB9C3 0%, #0B4B57 100%);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    margin-left: 10px;
+    height: 35px;
+    min-width: 100px;
+    white-space: nowrap;
+}
 
-/*nutrition search page*/
+.search-container .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(77, 185, 195, 0.3);
+    background: linear-gradient(135deg, #0B4B57 0%, #4DB9C3 100%);
+}
 
-/* Form Styles */
+/* Responsive Search Container */
+@media screen and (max-width: 768px) {
+    .search-container {
+        width: 90%;
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px;
+        min-width: 280px;
+    }
+
+    .search-container input {
+        width: 100%;
+        margin-bottom: 10px;
+        min-width: unset;
+    }
+
+    .search-container select {
+        width: calc(50% - 5px);
+        margin: 5px;
+        min-width: unset;
+    }
+
+    .search-container .btn {
+        width: 100%;
+        margin: 5px 0 0 0;
+        min-width: unset;
+    }
+}
+
+/* Nutrition Search Page Styles */
 .form-card {
-    background-color: #ffffff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-    padding: 20px;
-    max-width: 900px;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 1000px;
     margin: 30px auto;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-card h2 {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin-bottom: 25px;
+    text-align: center;
+    font-weight: 600;
 }
 
 .form-row {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.form-row:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .form-row label {
-    font-size: 1rem;
+    font-size: 1.1rem;
     color: #2c3e50;
-    width: 150px;
+    width: 180px;
+    font-weight: 500;
 }
 
 .form-row input {
     width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
     font-size: 1rem;
-    margin-left: 10px;
+    margin-left: 15px;
+    transition: all 0.3s ease;
+}
+
+.form-row input:focus {
+    border-color: #4DB9C3;
+    box-shadow: 0 0 0 3px rgba(77, 185, 195, 0.2);
+    outline: none;
 }
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
 .form-grid div {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.form-grid div:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.form-grid label {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    font-weight: 500;
+    display: block;
+}
+
+.form-grid input {
+    width: calc(50% - 10px);
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin: 5px;
+    transition: all 0.3s ease;
+}
+
+.form-grid input:focus {
+    border-color: #4DB9C3;
+    box-shadow: 0 0 0 3px rgba(77, 185, 195, 0.2);
+    outline: none;
+}
+
+.form-row .btn {
+    background: linear-gradient(135deg, #4DB9C3 0%, #0B4B57 100%);
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+.form-row .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(77, 185, 195, 0.3);
+    background: linear-gradient(135deg, #0B4B57 0%, #4DB9C3 100%);
+}
+
+/* Recipe Results Styling */
+.grid-container {
+    display: grid;
+    gap: 25px;
+    margin: 30px 0;
+    padding: 0 20px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 25px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    min-height: 400px;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.card h4 {
+    color: #2c3e50;
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.nutrition-list {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+}
+
+.nutrition-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.nutrition-list li:last-child {
+    border-bottom: none;
+}
+
+.card .btn {
+    margin-top: auto;
+    background: linear-gradient(135deg, #4DB9C3 0%, #0B4B57 100%);
+    color: white;
+    padding: 12px 25px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    text-align: center;
+    display: inline-block;
+}
+
+.card .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(77, 185, 195, 0.3);
+    background: linear-gradient(135deg, #0B4B57 0%, #4DB9C3 100%);
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .form-card {
+        padding: 20px;
+        margin: 20px 10px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .form-row label {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+
+    .form-row input {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid input {
+        width: calc(100% - 10px);
+    }
+
+    .grid-container {
+        grid-template-columns: 1fr;
+        padding: 0 10px;
+    }
+
+    .card {
+        min-height: auto;
+    }
+}
+
+/* Flash Messages */
+.flash-message {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 25px;
+    border-radius: 12px;
+    margin: 20px auto;
+    max-width: 800px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
