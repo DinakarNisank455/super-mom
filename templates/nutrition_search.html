@@ -1,69 +1,115 @@
 {% extends "base.html" %}
 
-{% block title %}Search by Nutrition - Personal Recipe Recommender{% endblock %}
+{% block title %}Nutrition Search - Personal Recipe Recommender{% endblock %}
 
 {% block content %}
-<h2>🔍 Search Recipes by Nutrition Requirements</h2>
-
-<form method="POST" class="form-card">
-    <div class="form-row">
-        <label>Search Keyword:</label>
-        <input type="text" name="query" placeholder="E.g., chicken, salad, pasta">
-    </div>
-    <div class="form-grid">
-        <div>
-            <label>Calories (Min - Max):</label>
-            <input type="number" name="min_calories" placeholder="Min" step="any">
-            <input type="number" name="max_calories" placeholder="Max" step="any">
+<div class="nutrition-search">
+    <h2>🔍 Nutrition Search</h2>
+    
+    <form method="POST" class="nutrition-form">
+        <div class="search-section">
+            <h3>Search Query</h3>
+            <div class="range-group">
+                <label for="query">Recipe Name or Keywords</label>
+                <input type="text" id="query" name="query" placeholder="e.g., healthy dinner, low-carb lunch" value="{{ request.form.get('query', '') }}">
+                <div class="range-info">Try searching for specific types of meals or dietary preferences</div>
+            </div>
         </div>
-        <div>
-            <label>Protein (Min - Max) (g):</label>
-            <input type="number" name="min_protein" placeholder="Min" step="any">
-            <input type="number" name="max_protein" placeholder="Max" step="any">
-        </div>
-        <div>
-            <label>Fat (Min - Max) (g):</label>
-            <input type="number" name="min_fat" placeholder="Min" step="any">
-            <input type="number" name="max_fat" placeholder="Max" step="any">
-        </div>
-        <div>
-            <label>Carbohydrates (Min - Max) (g):</label>
-            <input type="number" name="min_carbs" placeholder="Min" step="any">
-            <input type="number" name="max_carbs" placeholder="Max" step="any">
-        </div>
-        <div>
-            <label>Fiber (Min - Max) (g):</label>
-            <input type="number" name="min_fibers" placeholder="Min" step="any">
-            <input type="number" name="max_fibers" placeholder="Max" step="any">
-        </div>
-    </div>
 
-    <div class="form-row" style="text-align: center;">
-        <button class="btn" type="submit">🔎 Search Recipes</button>
-    </div>
-</form>
+        <div class="search-section">
+            <h3>Nutritional Requirements</h3>
+            <div class="nutrition-ranges">
+                <div class="range-group">
+                    <label for="min_calories">Minimum Calories</label>
+                    <input type="number" id="min_calories" name="min_calories" placeholder="0" value="{{ request.form.get('min_calories', '') }}">
+                    <div class="range-info">Recommended: <span>1200-1500</span> kcal minimum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="max_calories">Maximum Calories</label>
+                    <input type="number" id="max_calories" name="max_calories" placeholder="2000" value="{{ request.form.get('max_calories', '') }}">
+                    <div class="range-info">Recommended: <span>2000-2500</span> kcal maximum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="min_protein">Minimum Protein (g)</label>
+                    <input type="number" id="min_protein" name="min_protein" placeholder="0" value="{{ request.form.get('min_protein', '') }}">
+                    <div class="range-info">Recommended: <span>20-30</span>g minimum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="max_protein">Maximum Protein (g)</label>
+                    <input type="number" id="max_protein" name="max_protein" placeholder="100" value="{{ request.form.get('max_protein', '') }}">
+                    <div class="range-info">Recommended: <span>50-60</span>g maximum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="min_fat">Minimum Fat (g)</label>
+                    <input type="number" id="min_fat" name="min_fat" placeholder="0" value="{{ request.form.get('min_fat', '') }}">
+                    <div class="range-info">Recommended: <span>15-20</span>g minimum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="max_fat">Maximum Fat (g)</label>
+                    <input type="number" id="max_fat" name="max_fat" placeholder="70" value="{{ request.form.get('max_fat', '') }}">
+                    <div class="range-info">Recommended: <span>50-65</span>g maximum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="min_carbs">Minimum Carbs (g)</label>
+                    <input type="number" id="min_carbs" name="min_carbs" placeholder="0" value="{{ request.form.get('min_carbs', '') }}">
+                    <div class="range-info">Recommended: <span>100-150</span>g minimum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="max_carbs">Maximum Carbs (g)</label>
+                    <input type="number" id="max_carbs" name="max_carbs" placeholder="300" value="{{ request.form.get('max_carbs', '') }}">
+                    <div class="range-info">Recommended: <span>200-300</span>g maximum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="min_fibers">Minimum Fiber (g)</label>
+                    <input type="number" id="min_fibers" name="min_fibers" placeholder="0" value="{{ request.form.get('min_fibers', '') }}">
+                    <div class="range-info">Recommended: <span>15-20</span>g minimum</div>
+                </div>
+                
+                <div class="range-group">
+                    <label for="max_fibers">Maximum Fiber (g)</label>
+                    <input type="number" id="max_fibers" name="max_fibers" placeholder="50" value="{{ request.form.get('max_fibers', '') }}">
+                    <div class="range-info">Recommended: <span>25-30</span>g maximum</div>
+                </div>
+            </div>
+        </div>
 
-<hr>
+        <div class="search-actions">
+            <button type="submit" class="btn btn-primary">Search Recipes</button>
+            <a href="{{ url_for('recipe_search') }}" class="btn btn-secondary">Back to Search</a>
+        </div>
+    </form>
 
-{% if recipes %}
-<h3>📋 Search Results:</h3>
-
-<div class="grid-container">
-    {% for recipe in recipes %}
-    <div class="card">
-        <img src="{{ recipe.image }}" alt="{{ recipe.name }}" width="100%" style="border-radius: 10px;">
-        <h4>{{ recipe.name }}</h4>
-        <p><strong>Calories:</strong> {{ recipe.nutrition.calories|round }} kcal</p>
-        <p><strong>Protein:</strong> {{ recipe.nutrition.protein|round(1) }} g</p>
-        <p><strong>Fat:</strong> {{ recipe.nutrition.fat|round(1) }} g</p>
-        <p><strong>Carbs:</strong> {{ recipe.nutrition.carbohydrates|round(1) }} g</p>
-        <p><strong>Fibers:</strong> {{ recipe.nutrition.fibers|round(1) }} g</p>
-        <a href="{{ url_for('recipe_detail', recipe_id=recipe.idx) }}" class="btn">🍳 View Recipe</a>
-    </div>
-    {% endfor %}
+    {% if search_performed %}
+        {% if recipes %}
+            <div class="recipe-container grid-view">
+                {% for recipe in recipes %}
+                    <div class="recipe-card">
+                        <img src="{{ recipe.image }}" alt="{{ recipe.name }}">
+                        <h3>{{ recipe.name }}</h3>
+                        <div class="nutrition-list">
+                            <li>Calories: {{ recipe.nutrition.calories|round }} kcal</li>
+                            <li>Protein: {{ recipe.nutrition.protein|round(1) }}g</li>
+                            <li>Fat: {{ recipe.nutrition.fat|round(1) }}g</li>
+                            <li>Carbs: {{ recipe.nutrition.carbohydrates|round(1) }}g</li>
+                            <li>Fiber: {{ recipe.nutrition.fibers|round(1) }}g</li>
+                        </div>
+                        <a href="{{ url_for('recipe_detail', recipe_id=recipe.idx) }}" class="btn">View Recipe</a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-data">
+                <p>No recipes found matching your criteria. Try adjusting your search parameters.</p>
+            </div>
+        {% endif %}
+    {% endif %}
 </div>
-{% elif search_performed %}
-        <p style="text-align: center;">🔎 No recipes found. Try another search!</p>
-{% endif %}
-
 {% endblock %}

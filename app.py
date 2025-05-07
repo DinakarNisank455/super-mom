@@ -1,13 +1,9 @@
-from flask import Flask, render_template, request, redirect, session, flash, url_for, jsonify,make_response
-import io
-import pymysql
+from flask import Flask, render_template, request, redirect, session, flash, url_for, jsonify, make_response
+import io, pymysql, requests, re, json
 from datetime import datetime, timedelta
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
-import requests
 from difflib import get_close_matches
-import re
-import json
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -16,19 +12,32 @@ from reportlab.lib.units import inch
 
 app = Flask(__name__)
 
-# Secret Key & Session Config
+# Configuration
 app.secret_key = "secret_key"
 app.config["SESSION_TYPE"] = "filesystem"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 Session(app)
 
 # API Keys
-app_id = "9339488b"  
-app_key = "4f804a4822c6c387579112bcda286297"  
-
+app_id, app_key = "9339488b", "4f804a4822c6c387579112bcda286297"
 YOUTUBE_API_KEY = "AIzaSyB0-_00000000000000000000000000000000"
 
-# Common ingredients and recipe names for spelling correction
+# Database Connection
+def get_db_connection():
+    try:
+        conn = pymysql.connect(
+        host="localhost",
+        user="root",
+        password="@Bunny455",
+        database="prr",
+        autocommit=True
+    )
+        return conn
+    except pymysql.Error as e:
+        print(f"Database connection error: {str(e)}")
+        flash("⚠️ Database connection error. Please try again later.", "error")
+        return None
+
 COMMON_INGREDIENTS = [
     'chicken', 'beef', 'pork', 'lamb', 'turkey', 'fish', 'salmon', 'tuna', 'shrimp',
     'rice', 'pasta', 'bread', 'potato', 'tomato', 'onion', 'garlic', 'carrot',
@@ -37,6 +46,7 @@ COMMON_INGREDIENTS = [
     'cinnamon', 'basil', 'oregano', 'thyme', 'rosemary', 'parsley', 'cilantro'
 ]
 
+
 COMMON_RECIPE_NAMES = [
     'pasta', 'salad', 'soup', 'stew', 'curry', 'casserole', 'roast', 'grill',
     'bake', 'fry', 'steam', 'boil', 'stir-fry', 'sandwich', 'burger', 'pizza',
@@ -44,42 +54,73 @@ COMMON_RECIPE_NAMES = [
     'cookie', 'cake', 'pie', 'bread', 'roll', 'bun'
 ]
 
+# Helper Functions
 def correct_spelling(query, search_type='ingredients'):
-    """Correct spelling in search query using fuzzy matching."""
     words = query.lower().split()
     corrected_words = []
     suggestions = []
-    
-    # Choose the appropriate dictionary based on search type
     dictionary = COMMON_RECIPE_NAMES if search_type == 'name' else COMMON_INGREDIENTS
     
     for word in words:
-        # Clean the word of any special characters
         clean_word = re.sub(r'[^a-zA-Z]', '', word)
-        if not clean_word:
-            continue
-            
-        # Get close matches
+        if not clean_word: continue
         matches = get_close_matches(clean_word, dictionary, n=1, cutoff=0.8)
-        
         if matches and matches[0] != clean_word:
             corrected_words.append(matches[0])
-            suggestions.append(f"'{word}' → '{matches[0]}'")
+            suggestions.append(f"{clean_word} → {matches[0]}")
         else:
             corrected_words.append(word)
     
-    corrected_query = ' '.join(corrected_words)
-    return corrected_query, suggestions
+    return ' '.join(corrected_words), suggestions
 
-# Database Connection
-def get_db_connection():
-    return pymysql.connect(
-        host="localhost",
-        user="root",
-        password="@Bunny455",
-        database="prr",
-        autocommit=True
-    )
+def is_duplicate_recipe(recipe, seen_recipes):
+    recipe_signature = {
+        'name': recipe.get("label", "Unknown Recipe").lower(),
+        'ingredients': sorted([ing.lower() for ing in recipe.get("ingredientLines", [])]),
+        'calories': round(float(recipe.get("calories", 0))),
+        'protein': round(float(recipe.get("totalNutrients", {}).get("PROCNT", {}).get("quantity", 0) or 0)),
+        'fat': round(float(recipe.get("totalNutrients", {}).get("FAT", {}).get("quantity", 0) or 0)),
+        'carbs': round(float(recipe.get("totalNutrients", {}).get("CHOCDF", {}).get("quantity", 0) or 0))
+    }
+    recipe_key = (recipe_signature['name'], tuple(recipe_signature['ingredients'][:5]), recipe_signature['calories'], recipe_signature['protein'], recipe_signature['fat'], recipe_signature['carbs'])
+    if recipe_key in seen_recipes: return True
+    seen_recipes.add(recipe_key)
+    return False
+
+def process_recipe_data(recipe, idx):
+    try:
+        return {
+            "idx": idx,
+            "name": recipe.get("label", "Unknown Recipe"),
+            "image": recipe.get("image", ""),
+            "recipe_link": recipe.get("url", ""),
+            "diet_type": ", ".join(recipe.get("dietLabels", ["N/A"])),
+            "ingredients": recipe.get("ingredientLines", []),
+            "nutrition": {
+                "calories": float(recipe.get("calories", 0)),
+                "protein": float(recipe.get("totalNutrients", {}).get("PROCNT", {}).get("quantity", 0) or 0),
+                "fat": float(recipe.get("totalNutrients", {}).get("FAT", {}).get("quantity", 0) or 0),
+                "carbohydrates": float(recipe.get("totalNutrients", {}).get("CHOCDF", {}).get("quantity", 0) or 0),
+                "fibers": float(recipe.get("totalNutrients", {}).get("FIBTG", {}).get("quantity", 0) or 0)
+            },
+            "cuisine_type": ", ".join(recipe.get("cuisineType", ["N/A"])),
+            "meal_type": ", ".join(recipe.get("mealType", ["N/A"]))
+        }
+    except (ValueError, TypeError, KeyError):
+        return None
+
+def get_youtube_video(recipe_name):
+    try:
+        response = requests.get("https://www.googleapis.com/youtube/v3/search", params={
+            "part": "snippet", "q": f"{recipe_name} recipe", "key": YOUTUBE_API_KEY,
+            "type": "video", "maxResults": 1
+        })
+        response.raise_for_status()
+        data = response.json()
+        if data["items"]:
+            return f"https://www.youtube.com/embed/{data['items'][0]['id']['videoId']}"
+    except: pass
+    return None
 
 
 ALLERGENS = {
@@ -116,26 +157,18 @@ def generate_user_id():
 
 # Home
 @app.route("/")
-def home():
-    return render_template("index.html")
+def home(): return render_template("index.html")
 
-# Signup
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    if "user_id" in session:
-        return redirect(url_for("dashboard"))
-
+    if "user_id" in session: return redirect(url_for("dashboard"))
     if request.method == "POST":
-        name = request.form.get("name")
-        email = request.form.get("email")
-        password = request.form.get("password")
-        confirm_password = request.form.get("Confirm_password")
-
-        if not all([name, email, password, confirm_password]):
+        name, email = request.form.get("name"), request.form.get("email")
+        password, confirm = request.form.get("password"), request.form.get("Confirm_password")
+        if not all([name, email, password, confirm]):
             flash("⚠️ Please fill in all required fields!", "error")
             return redirect(url_for("signup"))
-
-        if confirm_password != password:
+        if confirm != password:
             flash("⚠️ Passwords do not match!", "error")
             return redirect(url_for("signup"))
 
@@ -160,13 +193,10 @@ def signup():
 
     return render_template("signup.html")
 
-#  Login
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email = request.form.get("email", "").strip()
-        password = request.form.get("password", "").strip()
-
+        email, password = request.form.get("email", "").strip(), request.form.get("password", "").strip()
         if not email or not password:
             flash("⚠️ Please enter both email and password.", "error")
             return redirect(url_for("login"))
@@ -257,12 +287,128 @@ def dashboard():
                          total_calories=total_calories,
                          recent_activity=recent_activity)
 
-#  Recipe Search
+@app.route("/nutrition_monitor")
+def nutrition_monitor():
+    if "user_id" not in session:
+        flash("⚠️ Please log in to view nutrition data.", "error")
+        return redirect(url_for("login"))
+
+    period = request.args.get('period', 'daily')  # Get period from query params
+    
+    try:
+        db = get_db_connection()
+        if db is None:
+            return redirect(url_for("dashboard"))
+            
+        with db.cursor(pymysql.cursors.DictCursor) as cursor:
+            if period == 'monthly':
+                # Get last 30 days of nutrition data
+                cursor.execute("""
+                    SELECT 
+                        DATE(saved_at) as date,
+                        COUNT(*) as meal_count,
+                        SUM(CAST(calories AS DECIMAL)) as total_calories,
+                        SUM(CAST(protein AS DECIMAL)) as total_protein,
+                        SUM(CAST(fat AS DECIMAL)) as total_fat,
+                        SUM(CAST(carbohydrates AS DECIMAL)) as total_carbs,
+                        SUM(CAST(fiber AS DECIMAL)) as total_fiber
+                    FROM saved_recipes 
+                    WHERE user_id = %s 
+                    AND saved_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+                    GROUP BY DATE(saved_at)
+                    ORDER BY date DESC
+                """, (session["user_id"],))
+                nutrition_data = cursor.fetchall()
+
+                # Calculate totals and averages
+                totals = {
+                    'calories': sum(day['total_calories'] or 0 for day in nutrition_data),
+                    'protein': sum(day['total_protein'] or 0 for day in nutrition_data),
+                    'fat': sum(day['total_fat'] or 0 for day in nutrition_data),
+                    'carbs': sum(day['total_carbs'] or 0 for day in nutrition_data),
+                    'fiber': sum(day['total_fiber'] or 0 for day in nutrition_data),
+                    'meals': sum(day['meal_count'] or 0 for day in nutrition_data)
+                }
+                
+                # Calculate daily averages
+                days_with_data = len(nutrition_data) or 1  # Avoid division by zero
+                averages = {
+                    'calories': totals['calories'] / days_with_data,
+                    'protein': totals['protein'] / days_with_data,
+                    'fat': totals['fat'] / days_with_data,
+                    'carbs': totals['carbs'] / days_with_data,
+                    'fiber': totals['fiber'] / days_with_data,
+                    'meals': totals['meals'] / days_with_data
+                }
+            else:
+                # Get today's nutrition data
+                cursor.execute("""
+                    SELECT 
+                        recipe_name,
+                        calories,
+                        protein,
+                        fat,
+                        carbohydrates,
+                        fiber,
+                        saved_at
+                    FROM saved_recipes 
+                    WHERE user_id = %s 
+                    AND DATE(saved_at) = CURDATE()
+                    ORDER BY saved_at DESC
+                """, (session["user_id"],))
+                nutrition_data = cursor.fetchall()
+
+                # Calculate totals for today
+                totals = {
+                    'calories': sum(meal['calories'] or 0 for meal in nutrition_data),
+                    'protein': sum(meal['protein'] or 0 for meal in nutrition_data),
+                    'fat': sum(meal['fat'] or 0 for meal in nutrition_data),
+                    'carbs': sum(meal['carbohydrates'] or 0 for meal in nutrition_data),
+                    'fiber': sum(meal['fiber'] or 0 for meal in nutrition_data),
+                    'meals': len(nutrition_data)
+                }
+                averages = totals  # For daily view, totals and averages are the same
+
+            # Get user's nutrition goals if available
+            cursor.execute("""
+                SELECT 
+                    daily_calories_goal,
+                    daily_protein_goal,
+                    daily_fat_goal,
+                    daily_carbs_goal,
+                    daily_fiber_goal
+                FROM users 
+                WHERE user_id = %s
+            """, (session["user_id"],))
+            goals = cursor.fetchone() or {}
+
+            # Calculate progress percentages
+            progress = {
+                'calories': (totals['calories'] / (goals.get('daily_calories_goal') or 2000)) * 100 if period == 'daily' else None,
+                'protein': (totals['protein'] / (goals.get('daily_protein_goal') or 50)) * 100 if period == 'daily' else None,
+                'fat': (totals['fat'] / (goals.get('daily_fat_goal') or 65)) * 100 if period == 'daily' else None,
+                'carbs': (totals['carbs'] / (goals.get('daily_carbs_goal') or 300)) * 100 if period == 'daily' else None,
+                'fiber': (totals['fiber'] / (goals.get('daily_fiber_goal') or 25)) * 100 if period == 'daily' else None
+            }
+
+        db.close()
+
+        return render_template("nutrition_monitor.html",
+                             nutrition_data=nutrition_data,
+                             totals=totals,
+                             averages=averages,
+                             progress=progress,
+                             period=period,
+                             goals=goals)
+
+    except Exception as e:
+        flash(f"⚠️ Error loading nutrition data: {str(e)}", "error")
+        return redirect(url_for("dashboard"))
+
+# Recipe Search
 
 @app.route("/recipe_search", methods=['GET'])
-def recipe_search():
-    return render_template('recipe_search.html')
-
+def recipe_search(): return render_template('recipe_search.html')
 
 @app.route("/select_search", methods=["POST"])
 def select_search():
@@ -275,38 +421,6 @@ def select_search():
         flash("⚠️ Invalid selection. Please try again.", "error")
         return redirect(url_for('nutrition_search'))
 
-def is_duplicate_recipe(recipe, seen_recipes):
-    """
-    Check if a recipe is a duplicate by comparing multiple attributes.
-    Returns True if it's a duplicate, False otherwise.
-    """
-    # Create a unique identifier based on multiple attributes
-    recipe_signature = {
-        'name': recipe.get("label", "Unknown Recipe").lower(),
-        'ingredients': sorted([ing.lower() for ing in recipe.get("ingredientLines", [])]),
-        'calories': round(float(recipe.get("calories", 0))),
-        'protein': round(float(recipe.get("totalNutrients", {}).get("PROCNT", {}).get("quantity", 0) or 0)),
-        'fat': round(float(recipe.get("totalNutrients", {}).get("FAT", {}).get("quantity", 0) or 0)),
-        'carbs': round(float(recipe.get("totalNutrients", {}).get("CHOCDF", {}).get("quantity", 0) or 0))
-    }
-    
-    # Convert to tuple for hashing
-    recipe_key = (
-        recipe_signature['name'],
-        tuple(recipe_signature['ingredients'][:5]),  # Compare first 5 ingredients
-        recipe_signature['calories'],
-        recipe_signature['protein'],
-        recipe_signature['fat'],
-        recipe_signature['carbs']
-    )
-    
-    if recipe_key in seen_recipes:
-        return True
-    
-    seen_recipes.add(recipe_key)
-    return False
-
-# Recipe Search by Ingredients
 @app.route("/ingredient_search", methods=["GET", "POST"])
 def ingredient_search():
     search_performed = False
@@ -321,7 +435,7 @@ def ingredient_search():
         if not search_query:
             flash("⚠️ Please enter a search term!", "error")
             return render_template("ingredient_search.html", recipes=[], search_performed=search_performed)
-
+        
         # Apply spelling correction
         corrected_query, spelling_suggestions = correct_spelling(search_query, search_type)
         
@@ -375,14 +489,9 @@ def ingredient_search():
             if diet_filter:
                 api_url += f"&diet={diet_filter}"
             
-            print(f"API URL: {api_url}")
-            
             response = requests.get(api_url)
-            print(f"Response Status: {response.status_code}")
-            
             response.raise_for_status()
             data = response.json()
-            print(f"Response Data: {data.keys() if data else 'No data'}")
 
             if not data or "hits" not in data or not data["hits"]:
                 if search_type == 'name':
@@ -391,7 +500,7 @@ def ingredient_search():
                     flash(f"⚠️ No recipes found with those ingredients. Try these combinations: {', '.join(suggestions[:5])}", "error")
                 return render_template("ingredient_search.html", recipes=[], search_performed=search_performed)
 
-            recipes = []
+                recipes = []
             seen_recipes = set()  # Track unique recipes
             duplicate_count = 0
             
@@ -429,10 +538,8 @@ def ingredient_search():
                     }
                     recipes.append(recipe_data)
                 except (ValueError, TypeError, KeyError) as e:
-                    print(f"Error processing recipe {idx}: {e}")
                     continue
 
-            print(f"Number of unique recipes found: {len(recipes)}")
             if duplicate_count > 0:
                 flash(f"ℹ️ {duplicate_count} similar recipes were removed to avoid duplicates.", "info")
 
@@ -444,11 +551,9 @@ def ingredient_search():
             return render_template("ingredient_search.html", recipes=recipes, search_performed=search_performed)
 
         except requests.exceptions.RequestException as e:
-            print(f"Request Exception: {str(e)}")
             flash(f"⚠️ Error connecting to recipe service: {str(e)}", "error")
             return render_template("ingredient_search.html", recipes=[], search_performed=search_performed)
         except Exception as e:
-            print(f"Unexpected Exception: {str(e)}")
             flash(f"⚠️ An unexpected error occurred: {str(e)}", "error")
             return render_template("ingredient_search.html", recipes=[], search_performed=search_performed)
 
@@ -456,119 +561,84 @@ def ingredient_search():
 
 # Recipe Search by Nutrition
 
+
 @app.route("/nutrition_search", methods=["GET", "POST"])
 def nutrition_search():
     search_performed = False
+    recipes = []
 
-    if request.method == "POST":
-        search_performed = True
+    try:
+        if request.method == "POST":
+            search_performed = True
 
-        def get_value(field, default):
-            value = request.form.get(field)
-            try:
-                return float(value) if value and value.strip() else default
-            except ValueError:
-                print(f"Invalid value for {field}: {value}")
-                return default
-
-        # Get and validate nutrition ranges
-        min_calories = get_value("min_calories", 0)
-        max_calories = get_value("max_calories", float('inf'))
-        min_protein = get_value("min_protein", 0)
-        max_protein = get_value("max_protein", float('inf'))
-        min_fat = get_value("min_fat", 0)
-        max_fat = get_value("max_fat", float('inf'))
-        min_carbs = get_value("min_carbs", 0)
-        max_carbs = get_value("max_carbs", float('inf'))
-        min_fibers = get_value("min_fibers", 0)
-        max_fibers = get_value("max_fibers", float('inf'))
-
-        # Validate ranges
-        if min_calories > max_calories:
-            flash("⚠️ Minimum calories cannot be greater than maximum calories", "error")
-            return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
-        if min_protein > max_protein:
-            flash("⚠️ Minimum protein cannot be greater than maximum protein", "error")
-            return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
-        if min_fat > max_fat:
-            flash("⚠️ Minimum fat cannot be greater than maximum fat", "error")
-            return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
-        if min_carbs > max_carbs:
-            flash("⚠️ Minimum carbohydrates cannot be greater than maximum carbohydrates", "error")
-            return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
-        if min_fibers > max_fibers:
-            flash("⚠️ Minimum fiber cannot be greater than maximum fiber", "error")
-            return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
-
-        # Get and validate search query
-        query = request.form.get("query", "").strip()
-        
-        # If no query is provided, use a default search term that will return a variety of recipes
-        if not query:
-            query = "healthy"  # Default search term that will return a good variety of recipes
-            flash("ℹ️ No search term provided. Showing a variety of recipes matching your nutritional criteria.", "info")
-
-        print(f"Search Query: {query}")
-        print(f"Nutrition Ranges:")
-        print(f"Calories: {min_calories}-{max_calories}")
-        print(f"Protein: {min_protein}-{max_protein}g")
-        print(f"Fat: {min_fat}-{max_fat}g")
-        print(f"Carbs: {min_carbs}-{max_carbs}g")
-        print(f"Fiber: {min_fibers}-{max_fibers}g")
-
-        # Build API URL with nutrition parameters
-        api_url = f"https://api.edamam.com/api/recipes/v2?q={query}&app_id={app_id}&app_key={app_key}&type=public"
-        
-        # Add nutrition parameters if specified
-        if max_calories != float('inf'):
-            api_url += f"&calories={min_calories}-{max_calories}"
-        if max_protein != float('inf'):
-            api_url += f"&nutrients[PROCNT]={min_protein}-{max_protein}"
-        if max_fat != float('inf'):
-            api_url += f"&nutrients[FAT]={min_fat}-{max_fat}"
-        if max_carbs != float('inf'):
-            api_url += f"&nutrients[CHOCDF]={min_carbs}-{max_carbs}"
-        if max_fibers != float('inf'):
-            api_url += f"&nutrients[FIBTG]={min_fibers}-{max_fibers}"
-
-        print(f"API URL: {api_url}")
-
-        try:
-            response = requests.get(api_url)
-            print(f"Response Status: {response.status_code}")
+            # Validate and sanitize input
+            query = request.form.get('query', '').strip()
+            if not query:
+                query = "healthy"  # Default search term
+                flash("No search term provided. Showing healthy recipes.", "info")
             
-            response.raise_for_status()
-            data = response.json()
-            print(f"Response Data: {data.keys() if data else 'No data'}")
-
-            if not data or "hits" not in data or not data["hits"]:
-                # Provide helpful suggestions based on the search criteria
-                suggestions = []
-                if query != "healthy":
-                    suggestions.append(f"Try searching for '{query}' with less restrictive nutrition ranges")
-                if min_calories > 0 or max_calories < float('inf'):
-                    suggestions.append("Try adjusting the calorie range")
-                if min_protein > 0 or max_protein < float('inf'):
-                    suggestions.append("Try adjusting the protein range")
-                if min_fat > 0 or max_fat < float('inf'):
-                    suggestions.append("Try adjusting the fat range")
-                
-                flash(f"⚠️ No recipes found matching your criteria. {' '.join(suggestions)}", "error")
+            # Validate numeric inputs with proper error handling
+            try:
+                min_calories = float(request.form.get('min_calories', 0) or 0)
+                max_calories = float(request.form.get('max_calories', float('inf')) or float('inf'))
+                min_protein = float(request.form.get('min_protein', 0) or 0)
+                max_protein = float(request.form.get('max_protein', float('inf')) or float('inf'))
+                min_fat = float(request.form.get('min_fat', 0) or 0)
+                max_fat = float(request.form.get('max_fat', float('inf')) or float('inf'))
+                min_carbs = float(request.form.get('min_carbs', 0) or 0)
+                max_carbs = float(request.form.get('max_carbs', float('inf')) or float('inf'))
+                min_fibers = float(request.form.get('min_fibers', 0) or 0)
+                max_fibers = float(request.form.get('max_fibers', float('inf')) or float('inf'))
+            except ValueError as e:
+                print(f"Invalid numeric input: {str(e)}")
+                flash("Invalid numeric values provided. Please check your input.", "error")
+                return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
+            
+            # Validate ranges
+            if min_calories > max_calories or min_protein > max_protein or min_fat > max_fat or min_carbs > max_carbs or min_fibers > max_fibers:
+                flash("Minimum values cannot be greater than maximum values.", "error")
+                return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
+            
+            # Prepare API request with timeout
+            try:
+                response = requests.get(
+                    "https://api.edamam.com/api/recipes/v2",
+                    params={
+                        "type": "public",
+                        "q": query,
+                        "app_id": app_id,
+                        "app_key": app_key,
+                        "diet": "balanced",
+                        "random": "true"
+                    },
+                    timeout=10  # 10 second timeout
+                )
+                response.raise_for_status()
+                data = response.json()
+            except requests.exceptions.RequestException as e:
+                flash(f"Error connecting to recipe service: {str(e)}", "error")
                 return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
 
-            recipes = []
-            seen_recipes = set()  # Track unique recipes
+            if not data or "hits" not in data or not data["hits"]:
+                suggestions = generate_search_suggestions(query)
+                flash(f"No recipes found. Try these suggestions: {', '.join(suggestions[:5])}", "info")
+                return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
             
+            # Process recipes with duplicate detection
+            recipes = []
+            seen_recipes = set()
+            duplicate_count = 0
+                
             for idx, hit in enumerate(data["hits"]):
                 if "recipe" not in hit:
                     continue
-
+                    
                 recipe = hit["recipe"]
-                
-                # Check for duplicates using multiple attributes
+                    
                 if is_duplicate_recipe(recipe, seen_recipes):
+                    duplicate_count += 1
                     continue
-                
+                    
                 try:
                     nutrition = {
                         "calories": float(recipe.get("calories", 0)),
@@ -577,16 +647,14 @@ def nutrition_search():
                         "carbohydrates": float(recipe.get("totalNutrients", {}).get("CHOCDF", {}).get("quantity", 0) or 0),
                         "fibers": float(recipe.get("totalNutrients", {}).get("FIBTG", {}).get("quantity", 0) or 0)
                     }
-
-                    # Additional validation of nutrition values
-                    if (
-                        min_calories <= nutrition["calories"] <= max_calories and
+                        
+                    if (min_calories <= nutrition["calories"] <= max_calories and
                         min_protein <= nutrition["protein"] <= max_protein and
                         min_fat <= nutrition["fat"] <= max_fat and
                         min_carbs <= nutrition["carbohydrates"] <= max_carbs and
-                        min_fibers <= nutrition["fibers"] <= max_fibers
-                    ):
-                        recipes.append({
+                        min_fibers <= nutrition["fibers"] <= max_fibers):
+                            
+                        recipe_data = {
                             "idx": idx,
                             "name": recipe.get("label", "Unknown Recipe"),
                             "image": recipe.get("image", ""),
@@ -596,75 +664,95 @@ def nutrition_search():
                             "nutrition": nutrition,
                             "cuisine_type": ", ".join(recipe.get("cuisineType", ["N/A"])),
                             "meal_type": ", ".join(recipe.get("mealType", ["N/A"]))
-                        })
+                        }
+                        recipes.append(recipe_data)
                 except (ValueError, TypeError, KeyError) as e:
-                    print(f"Error processing recipe {idx}: {e}")
+                    print(f"Error processing recipe {idx}: {str(e)}")
                     continue
-
-            print(f"Number of unique recipes found: {len(recipes)}")
-
+                
+            if duplicate_count > 0:
+                flash(f"{duplicate_count} similar recipes were removed to avoid duplicates.", "info")
+                
             if not recipes:
-                flash("⚠️ No recipes found matching your nutritional criteria. Try adjusting the ranges.", "error")
-                return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
-
+                flash("No recipes found matching your nutritional criteria. Try adjusting the ranges.", "info")
+                
             session["nutrition_search_results"] = recipes
-            return render_template("nutrition_search.html", recipes=recipes, search_performed=search_performed)
 
-        except requests.exceptions.RequestException as e:
-            print(f"Request Exception: {str(e)}")
-            flash(f"⚠️ Error connecting to recipe service: {str(e)}", "error")
-            return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
-        except Exception as e:
-            print(f"Unexpected Exception: {str(e)}")
-            flash(f"⚠️ An unexpected error occurred: {str(e)}", "error")
-            return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
+    except Exception as e:
+        print(f"Error in nutrition search: {str(e)}")
+        flash("An error occurred while searching for recipes.", "error")
+        return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
 
-    return render_template("nutrition_search.html", recipes=[], search_performed=search_performed)
+    return render_template("nutrition_search.html", recipes=recipes, search_performed=search_performed)
 
-
-#  Save Recipe
 @app.route("/save_recipe", methods=["POST"])
 def save_recipe():
-    if "user_id" not in session:
-        flash("⚠️ Please log in to save recipes.", "error")
-        return redirect(url_for("login"))
-
     try:
+        if "user_id" not in session:
+            flash("⚠️ Please log in to save recipes.", "error")
+            return redirect(url_for("login"))
+
         recipe_data = request.form.get('recipe_data')
         if not recipe_data:
-            flash("⚠️ No recipe data provided.", "error")
+            flash("No recipe data provided.", "error")
             return redirect(url_for("recipe_search"))
             
         recipe = json.loads(recipe_data)
         
-        db = get_db_connection()
-        with db.cursor() as cursor:
-            cursor.execute("""
-                INSERT INTO saved_recipes (
-                    user_id, recipe_name, image_url, recipe_url, 
-                    diet_type, ingredients, calories, protein, 
-                    fat, carbohydrates, fiber
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (
-                session["user_id"],
-                recipe.get("name", "Unknown Recipe"),
-                recipe.get("image", ""),
-                recipe.get("recipe_link", ""),
-                recipe.get("diet_type", "N/A"),
-                json.dumps(recipe.get("ingredients", [])),
-                recipe.get("nutrition", {}).get("calories", 0),
-                recipe.get("nutrition", {}).get("protein", 0),
-                recipe.get("nutrition", {}).get("fat", 0),
-                recipe.get("nutrition", {}).get("carbohydrates", 0),
-                recipe.get("nutrition", {}).get("fibers", 0)
-            ))
-        db.close()
+        # Validate required fields
+        required_fields = ['name', 'image', 'recipe_link', 'ingredients', 'nutrition']
+        for field in required_fields:
+            if field not in recipe:
+                flash(f"Missing required field: {field}", "error")
+                return redirect(url_for("recipe_search"))
+        
+        # Extract nutrition data with proper error handling
+        nutrition = recipe.get('nutrition', {})
+        calories = float(nutrition.get('calories', 0) or 0)
+        protein = float(nutrition.get('protein', 0) or 0)
+        fat = float(nutrition.get('fat', 0) or 0)
+        carbs = float(nutrition.get('carbohydrates', 0) or 0)
+        fiber = float(nutrition.get('fibers', 0) or 0)
+        
+        with get_db_connection() as db:
+            if db is None:
+                flash("Database connection error. Please try again later.", "error")
+                return redirect(url_for("recipe_search"))
+                
+            with db.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO saved_recipes (
+                        user_id, recipe_name, image_url, recipe_url, 
+                        diet_type, ingredients, calories, protein, 
+                        fat, carbohydrates, fiber
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    session["user_id"],
+                    recipe.get("name", "Unknown Recipe"),
+                    recipe.get("image", ""),
+                    recipe.get("recipe_link", ""),
+                    recipe.get("diet_type", "N/A"),
+                    json.dumps(recipe.get("ingredients", [])),
+                    calories,
+                    protein,
+                    fat,
+                    carbs,
+                    fiber
+                ))
+                db.commit()
 
         flash("✅ Recipe saved successfully!", "success")
         return redirect(url_for("dashboard"))
+
+    except json.JSONDecodeError:
+        flash("Invalid recipe data format.", "error")
+        return redirect(url_for("recipe_search"))
+    except ValueError as e:
+        flash(f"Invalid numeric value: {str(e)}", "error")
+        return redirect(url_for("recipe_search"))
     except Exception as e:
-        print(f"Error saving recipe: {str(e)}")
-        flash("⚠️ Error saving recipe. Please try again.", "error")
+        print(f"Error saving recipe: {str(e)}")  # Log the error for debugging
+        flash("Error saving recipe. Please try again.", "error")
         return redirect(url_for("recipe_search"))
 
 # 🔹 YouTube Video Fetch
@@ -730,22 +818,21 @@ def recipe_detail(recipe_id):
         return render_template("recipe_detail.html", recipe=selected_recipe, youtube_video=youtube_video)
     except Exception as e:
         flash(f"⚠️ Error loading recipe: {str(e)}", "error")
-        return redirect(url_for("recipe_search"))
+    return redirect(url_for("recipe_search"))
 
 # Saved Recipes View
 @app.route("/saved_recipes")
 def saved_recipes():
-    if "user_id" not in session:
-        flash("⚠️ Please log in to view saved recipes.", "error")
-        return redirect(url_for("login"))
-
-    db = get_db_connection()
-    with db.cursor(pymysql.cursors.DictCursor) as cursor:
-        cursor.execute("SELECT * FROM saved_recipes WHERE user_id = %s", (session["user_id"],))
-        recipes = cursor.fetchall()
-    db.close()
-
-    return render_template("saved_recipes.html", recipes=recipes)
+    try:
+        with get_db_connection() as db:
+            with db.cursor(pymysql.cursors.DictCursor) as cursor:
+                cursor.execute("SELECT * FROM saved_recipes WHERE user_id = %s", (session["user_id"],))
+                recipes = cursor.fetchall()
+        
+        return render_template("saved_recipes.html", recipes=recipes)
+    except Exception as e:
+        flash("Error loading saved recipes. Please try again.", "error")
+        return redirect(url_for("dashboard"))
 
 # Profile Routes
 @app.route("/profile")
@@ -1259,84 +1346,23 @@ def logout():
     flash("✅ You have been logged out.", "success")
     return redirect(url_for("login"))
 
-@app.route("/nutrition_monitor")
-def nutrition_monitor():
-    if "user_id" not in session:
-        flash("⚠️ Please log in to view nutrition data.", "error")
-        return redirect(url_for("login"))
-
-    period = request.args.get('period', 'daily')  # Get period from query params
+def generate_search_suggestions(query):
+    suggestions = []
+    query = query.lower()
     
-    db = get_db_connection()
-    with db.cursor(pymysql.cursors.DictCursor) as cursor:
-        if period == 'monthly':
-            # Get last 30 days of nutrition data
-            cursor.execute("""
-                SELECT 
-                    DATE(saved_at) as date,
-                    SUM(CAST(calories AS DECIMAL)) as total_calories,
-                    SUM(CAST(protein AS DECIMAL)) as total_protein,
-                    SUM(CAST(fat AS DECIMAL)) as total_fat,
-                    SUM(CAST(carbohydrates AS DECIMAL)) as total_carbs,
-                    SUM(CAST(fiber AS DECIMAL)) as total_fiber
-                FROM saved_recipes 
-                WHERE user_id = %s 
-                AND saved_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-                GROUP BY DATE(saved_at)
-                ORDER BY date
-            """, (session["user_id"],))
-        else:
-            # Get today's nutrition data
-            cursor.execute("""
-                SELECT 
-                    recipe_name,
-                    calories,
-                    protein,
-                    fat,
-                    carbohydrates,
-                    fiber,
-                    saved_at
-                FROM saved_recipes 
-                WHERE user_id = %s 
-                AND DATE(saved_at) = CURDATE()
-                ORDER BY saved_at
-            """, (session["user_id"],))
-        
-        nutrition_data = cursor.fetchall()
-
-        # Calculate totals and averages
-        if period == 'monthly':
-            totals = {
-                'calories': sum(day['total_calories'] for day in nutrition_data),
-                'protein': sum(day['total_protein'] for day in nutrition_data),
-                'fat': sum(day['total_fat'] for day in nutrition_data),
-                'carbs': sum(day['total_carbs'] for day in nutrition_data),
-                'fiber': sum(day['total_fiber'] for day in nutrition_data)
-            }
-            averages = {
-                'calories': totals['calories'] / len(nutrition_data) if nutrition_data else 0,
-                'protein': totals['protein'] / len(nutrition_data) if nutrition_data else 0,
-                'fat': totals['fat'] / len(nutrition_data) if nutrition_data else 0,
-                'carbs': totals['carbs'] / len(nutrition_data) if nutrition_data else 0,
-                'fiber': totals['fiber'] / len(nutrition_data) if nutrition_data else 0
-            }
-        else:
-            totals = {
-                'calories': sum(meal['calories'] for meal in nutrition_data),
-                'protein': sum(meal['protein'] for meal in nutrition_data),
-                'fat': sum(meal['fat'] for meal in nutrition_data),
-                'carbs': sum(meal['carbohydrates'] for meal in nutrition_data),
-                'fiber': sum(meal['fiber'] for meal in nutrition_data)
-            }
-            averages = totals  # For daily view, totals and averages are the same
-
-    db.close()
-
-    return render_template("nutrition_monitor.html",
-                         nutrition_data=nutrition_data,
-                         totals=totals,
-                         averages=averages,
-                         period=period)
+    # Add common recipe types
+    recipe_types = ['healthy', 'quick', 'easy', 'vegetarian', 'vegan', 'low-carb', 'high-protein']
+    suggestions.extend([f"{query} {type}" for type in recipe_types])
+    
+    # Add common ingredients
+    common_ingredients = ['chicken', 'beef', 'pasta', 'rice', 'salad', 'soup']
+    suggestions.extend([f"{ingredient} {query}" for ingredient in common_ingredients])
+    
+    # Add common cooking methods
+    cooking_methods = ['baked', 'grilled', 'roasted', 'steamed', 'stir-fried']
+    suggestions.extend([f"{method} {query}" for method in cooking_methods])
+    
+    return suggestions
 
 # Start Server
 if __name__ == "__main__":

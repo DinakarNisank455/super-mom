@@ -69,7 +69,20 @@
 
 <div class="recipe-actions">
     <form method="POST" action="{{ url_for('save_recipe') }}" class="action-form">
-        <input type="hidden" name="recipe_data" value="{{ recipe|tojson }}">
+        <input type="hidden" name="recipe_data" value="{{ {
+            'name': recipe.name,
+            'image': recipe.image,
+            'recipe_link': recipe.recipe_link,
+            'diet_type': recipe.diet_type,
+            'ingredients': recipe.ingredients,
+            'nutrition': {
+                'calories': recipe.nutrition.calories|default(0),
+                'protein': recipe.nutrition.protein|default(0),
+                'fat': recipe.nutrition.fat|default(0),
+                'carbohydrates': recipe.nutrition.carbohydrates|default(0),
+                'fibers': recipe.nutrition.fibers|default(0)
+            }
+        }|tojson }}">
         <button type="submit" class="btn save-btn">💾 Save Recipe</button>
     </form>
     <form method="POST" action="{{ url_for('add_to_grocery_list') }}" class="action-form">
