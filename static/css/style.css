@@ -1,4 +1,3 @@
-
 /* General Styles */
 body {
       background: linear-gradient(180deg, #0B4B57 0%, #4DB9C3 100%),
@@ -25,6 +24,7 @@ body {
 .container{
     display: flex;
     justify-content: center;
+    
 }
 /* Form Container */
 .form-container {
@@ -595,4 +595,479 @@ body {
 .form-grid div {
     display: flex;
     flex-direction: column;
+}
+
+/* Nutrition Monitor Styles */
+.nutrition-monitor {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.nutrition-monitor h2 {
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.period-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.period-toggle .btn {
+    width: auto;
+    padding: 8px 20px;
+    background: #f0f0f0;
+    color: #333;
+    text-decoration: none;
+    border-radius: 20px;
+}
+
+.period-toggle .btn.active {
+    background: #5F9DF7;
+    color: white;
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-cards .card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    min-height: auto;
+    max-width: none;
+}
+
+.summary-cards .card h3 {
+    color: #666;
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.summary-cards .card .number {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #333;
+    margin: 10px 0;
+}
+
+.summary-cards .card .average {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.progress-bar {
+    background: #f0f0f0;
+    border-radius: 10px;
+    height: 8px;
+    margin-top: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar .progress {
+    background: #5F9DF7;
+    height: 100%;
+    transition: width 0.3s ease;
+    width: 0;
+}
+
+.progress-bar span {
+    display: block;
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 5px;
+}
+
+.meal-history {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.meal-history h3 {
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.meal-list {
+    display: grid;
+    gap: 15px;
+}
+
+.meal-card {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #5F9DF7;
+}
+
+.meal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.meal-header h4 {
+    color: #333;
+    margin: 0;
+}
+
+.meal-time {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.meal-nutrition {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.meal-nutrition p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.no-data {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
+@media screen and (max-width: 768px) {
+    .summary-cards {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .meal-nutrition {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Nutrition Search Styles */
+.nutrition-search {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.nutrition-search h2 {
+    color: #0B4B57;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+.nutrition-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.search-section {
+    grid-column: 1 / -1;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid #e9ecef;
+}
+
+.search-section h3 {
+    color: #0B4B57;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.nutrition-ranges {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.range-group {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.range-group label {
+    display: block;
+    color: #495057;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.range-group input {
+    padding: 10px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: border-color 0.3s ease;
+}
+
+.range-group input:focus {
+    border-color: #5F9DF7;
+    outline: none;
+}
+
+.range-group input::placeholder {
+    color: #adb5bd;
+}
+
+.search-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.search-actions .btn {
+    padding: 12px 30px;
+    font-size: 1.1em;
+    border-radius: 25px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.search-actions .btn-primary {
+    background: #5F9DF7;
+    color: white;
+}
+
+.search-actions .btn-secondary {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.range-info {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.range-info span {
+    color: #0B4B57;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+    .nutrition-form {
+        grid-template-columns: 1fr;
+    }
+    
+    .nutrition-ranges {
+        grid-template-columns: 1fr;
+    }
+    
+    .search-actions {
+        flex-direction: column;
+    }
+    
+    .search-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Flash Messages */
+.flash-messages {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.flash-message {
+    padding: 15px 25px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.3s ease;
+}
+
+.flash-message.success {
+    border-left: 4px solid #28a745;
+}
+
+.flash-message.error {
+    border-left: 4px solid #dc3545;
+}
+
+.flash-message.info {
+    border-left: 4px solid #17a2b8;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Nutrition Goals Styles */
+.nutrition-goals {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 30px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.nutrition-goals h2 {
+    color: #0B4B57;
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 2em;
+}
+
+.goals-form {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.form-group {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.form-group label {
+    display: block;
+    color: #495057;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+    border-color: #5F9DF7;
+    outline: none;
+}
+
+.range-info {
+    display: block;
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.form-actions .btn {
+    padding: 12px 30px;
+    font-size: 1.1em;
+    border-radius: 25px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.goals-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 30px;
+}
+
+.goals-info h3 {
+    color: #0B4B57;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.goals-info ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.goals-info li {
+    margin-bottom: 10px;
+    padding-left: 25px;
+    position: relative;
+}
+
+.goals-info li:before {
+    content: "•";
+    color: #5F9DF7;
+    position: absolute;
+    left: 0;
+    font-size: 1.2em;
+}
+
+@media screen and (max-width: 768px) {
+    .nutrition-goals {
+        padding: 20px;
+        margin: 10px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    .form-actions .btn {
+        width: 100%;
+    }
 }

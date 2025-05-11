@@ -1,0 +1,153 @@
+.nutrition-monitor {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.period-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.period-toggle .btn {
+    padding: 8px 20px;
+    border-radius: 20px;
+    background: var(--background-light);
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all var(--transition-speed) ease;
+}
+
+.period-toggle .btn.active {
+    background: var(--primary-color);
+    color: var(--light-text);
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: var(--background-light);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.card h3 {
+    margin: 0 0 10px 0;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.card .number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.card .average {
+    color: var(--text-color);
+    opacity: 0.7;
+    margin: 5px 0 0 0;
+}
+
+.progress-bar {
+    background: var(--background-color);
+    border-radius: 10px;
+    height: 8px;
+    margin-top: 10px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar .progress {
+    background: var(--primary-color);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.progress-bar span {
+    position: absolute;
+    right: 0;
+    top: -20px;
+    font-size: 0.8rem;
+    color: var(--text-color);
+}
+
+.meal-history {
+    margin-top: 30px;
+}
+
+.meal-history h3 {
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.meal-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.meal-card {
+    background: var(--background-light);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.meal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.meal-header h4 {
+    margin: 0;
+    color: var(--text-color);
+}
+
+.meal-time {
+    color: var(--text-color);
+    opacity: 0.7;
+    font-size: 0.9rem;
+}
+
+.meal-nutrition {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.meal-nutrition p {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 0.9rem;
+}
+
+.no-data {
+    text-align: center;
+    color: var(--text-color);
+    opacity: 0.7;
+    padding: 40px;
+    background: var(--background-light);
+    border-radius: var(--border-radius);
+}
+
+@media screen and (max-width: 768px) {
+    .summary-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .meal-list {
+        grid-template-columns: 1fr;
+    }
+} 

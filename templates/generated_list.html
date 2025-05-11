@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Personal Recipe Recommender{% endblock %}
+
+{% block content %}
+<div class="grocery-list-container">
+    <h2>🛒 Your Grocery List</h2>
+    
+    <div class="summary-section">
+        <div class="summary-item">
+            <span class="summary-icon">📋</span>
+            <span class="summary-label">Total Recipes:</span>
+            <span class="summary-value">{{ summary.total_recipes }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-icon">🧾</span>
+            <span class="summary-label">Total Ingredients:</span>
+            <span class="summary-value">{{ summary.total_ingredients }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-icon">📑</span>
+            <span class="summary-label">Categories:</span>
+            <span class="summary-value">{{ summary.categories }}</span>
+        </div>
+    </div>
+    
+    <div class="recipes-summary">
+        <h3>📚 Recipes Included:</h3>
+        <ul>
+            {% for recipe in recipes %}
+            <li>{{ recipe.name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="categorized-ingredients">
+        {% for category, ingredients in categorized_ingredients.items() %}
+        <div class="category-section">
+            <h3>{{ category }}</h3>
+            <ul class="ingredient-list">
+                {% for ingredient in ingredients %}
+                <li>
+                    <input type="checkbox" class="ingredient-checkbox" id="ingredient-{{ loop.index }}">
+                    <label for="ingredient-{{ loop.index }}" class="ingredient-name">
+                        {{ ingredient.original }}
+                        <span class="recipe-source">(from {{ ingredient.recipe }})</span>
+                    </label>
+                </li>
+    {% endfor %}
+</ul>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="grocery-actions">
+        <button onclick="window.print()" class="btn print-btn">🖨️ Print List</button>
+        <a href="{{ url_for('download_grocery_list') }}" class="btn download-btn">📥 Download List</a>
+        <form method="POST" action="{{ url_for('clear_grocery_list') }}" style="display: inline;">
+            <button type="submit" class="btn clear-btn">🗑️ Clear List</button>
+        </form>
+    </div>
+</div>
+
+<style>
+.grocery-list-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.summary-section {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.summary-item {
+    text-align: center;
+    padding: 10px;
+}
+
+.summary-icon {
+    font-size: 1.5em;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.summary-label {
+    display: block;
+    color: #666;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+}
+
+.summary-value {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.recipes-summary {
+    margin-bottom: 30px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.recipes-summary h3 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.recipes-summary ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.recipes-summary li {
+    padding: 5px 10px;
+    background: #fff;
+    border-radius: 5px;
+    color: #666;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.category-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.category-section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #4DB9C3;
+}
+
+.ingredient-list {
+    list-style: none;
+    padding: 0;
+}
+
+.ingredient-list li {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.ingredient-list li:last-child {
+    border-bottom: none;
+}
+
+.ingredient-checkbox {
+    margin-right: 10px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+.ingredient-name {
+    color: #333;
+    font-size: 1.1em;
+    cursor: pointer;
+    flex-grow: 1;
+}
+
+.recipe-source {
+    font-size: 0.8em;
+    color: #666;
+    font-style: italic;
+    margin-left: 5px;
+}
+
+.grocery-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.print-btn {
+    background: linear-gradient(135deg, #4DB9C3 0%, #0B4B57 100%);
+    color: white;
+}
+
+.download-btn {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+    text-decoration: none;
+}
+
+.clear-btn {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+@media print {
+    .grocery-actions {
+        display: none;
+    }
+    
+    .grocery-list-container {
+        box-shadow: none;
+        padding: 0;
+    }
+    
+    .category-section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .summary-section {
+        background: none;
+        box-shadow: none;
+    }
+    
+    .recipes-summary {
+        background: none;
+    }
+    
+    .recipe-source {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

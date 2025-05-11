@@ -6,8 +6,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Recipe Recommender{% endblock %}</title>
-    <link rel="stylesheet" href="/static/css/style.css">
-    <script src="{{ url_for('static', filename='static/script.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </head>
 
@@ -15,7 +15,7 @@
     <nav class="navbar">
     
         <div>
-            <img src="static/image/logo.png" class="logo" alt="Logo">
+            <img src="{{ url_for('static', filename='images/logo2.png') }}" class="logo" alt="Logo">
         </div>
         <ul class="nav-links">
             {% if 'user_id' in session %}
@@ -23,6 +23,7 @@
             <li><a href="/dashboard">Dashboard</a></li>
             <li><a href="/recipe_search">Recipes</a></li>
             <li><a href="{{ url_for('saved_recipes') }}">Saved Recipes</a></li>
+            <li><a href="/profile">Profile</a></li>
             <li><a href="/logout">Logout</a></li>
             {% else %}
             <li><a href="/login">Login</a></li>

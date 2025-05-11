@@ -91,3 +91,45 @@ document.getElementById("generate-grocery-btn").addEventListener("click", functi
 function closeGroceryList() {
     document.getElementById("grocery-list-modal").style.display = "none";
 }
+
+// Add navigation error handling
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.message);
+});
+
+// Add navigation debugging
+document.addEventListener('DOMContentLoaded', function() {
+    // Debug all navigation links
+    document.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', function(e) {
+            console.log('Navigation clicked:', this.href);
+            // Prevent default if there's an error
+            try {
+                if (!this.href) {
+                    console.error('Invalid href:', this);
+                    e.preventDefault();
+                }
+            } catch (error) {
+                console.error('Navigation error:', error);
+                e.preventDefault();
+            }
+        });
+    });
+
+    // Debug form submissions
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submitted:', this.action);
+            // Prevent default if there's an error
+            try {
+                if (!this.action) {
+                    console.error('Invalid form action:', this);
+                    e.preventDefault();
+                }
+            } catch (error) {
+                console.error('Form submission error:', error);
+                e.preventDefault();
+            }
+        });
+    });
+});

@@ -1,67 +1,51 @@
 <!-- register page.html -->
 {% extends "base.html" %}
 
-{% block title %}Personal Recipe Recommender{% endblock %}
+{% block title %}Sign Up - Personal Recipe Recommender{% endblock %}
 
 {% block content %}
-<form action="/login" method="POST">
+<form action="/signup" method="POST">
     <div class="form-container">
         <div class="form-title">REGISTER</div>
 
         <div class="input-group">
-            <label>Name</label>
-            <input type="text" placeholder="Enter your name">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Enter your name" required>
         </div>
 
         <div class="input-group">
-            <label>Email</label>
-            <input type="email" placeholder="Enter your email">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="Enter your email" required>
         </div>
 
         <div class="input-group">
-            <label>Password</label>
-            <input type="password" placeholder="Enter your password">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Enter your password" required>
         </div>
 
         <div class="input-group">
-            <label>Confirm Password</label>
-            <input type="Confirm_password" placeholder="Confirm your password">
-        </div>
-
-        <div class="checkbox-group">
-            GYM MEMBER <input type="checkbox" name="gym_member">
-        </div>
-
-        <div class="input-group select-group">
-            <label>Select Diet Plan</label>
-            <select name="diet_plan">
-                <option>Select</option>
-                <option>Weight Loss</option>
-                <option>Muscle Gain</option>
-                <option>Balanced Diet</option>
-            </select>
-        </div>
-
-        <!-- Daily, Monthly, Weekly Selection -->
-        <div class="radio-group">
-            <input type="radio" id="daily" name="plan" checked>
-            <label for="daily">DAILY</label>
-
-            <input type="radio" id="monthly" name="plan">
-            <label for="monthly">MONTHLY</label>
-
-            <input type="radio" id="weekly" name="plan">
-            <label for="weekly">WEEKLY</label>
+            <label for="Confirm_password">Confirm Password</label>
+            <input type="password" id="Confirm_password" name="Confirm_password" placeholder="Confirm your password" required>
         </div>
 
         <div class="input-group">
-            <label>Allergies</label>
-            <input type="text" placeholder="Enter any allergies">
+            <label for="allergies">Allergies (optional)</label>
+            <input type="text" id="allergies" name="allergies" placeholder="Enter any allergies, separated by commas">
         </div>
 
-        <button class="btn">REGISTER</button>
+        <button type="submit" class="btn">REGISTER</button>
         
-        <p style="margin-top: 25px;">already have a account ?<a href="/login" style="margin-left: 5px;" class="btn"> Login</a></p>
+        <p style="margin-top: 25px;">Already have an account? <a href="/login" style="margin-left: 5px;" class="btn">Login</a></p>
     </div>
 </form>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="flash-message {{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
 {% endblock %}

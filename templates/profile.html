@@ -1,120 +1,367 @@
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1" name="viewport" />
-    <title>
-        Profile Page
-    </title>
-    <script src="https://cdn.tailwindcss.com">
-    </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet" />
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+{% block title %}Profile - Personal Recipe Recommender{% endblock %}
 
-        body {
-            font-family: 'Roboto', sans-serif;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="min-h-screen flex flex-col items-center pt-12 px-4"
-        style="background: linear-gradient(180deg, #0f4a5c 0%, #4db6b1 100%)">
-        <div class="relative">
-            <img alt="Illustration of a doctor wearing a mask holding a clipboard"
-                class="rounded-full w-28 h-28 object-cover" height="120"
-                src="https://storage.googleapis.com/a1aa/image/b4b5ee44-dbe9-4a8c-8ee6-a0427d42caaa.jpg" width="120" />
-            <i class="fas fa-edit absolute bottom-0 right-0 text-gray-900 text-xl bg-white rounded-full p-1 cursor-pointer"
-                style="box-shadow: 0 0 3px rgba(0,0,0,0.3)">
-            </i>
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h2>👤 User Profile</h2>
+        <div class="profile-stats">
+            <div class="stat-card">
+                <span class="stat-icon">📚</span>
+                <div class="stat-info">
+                    <span class="stat-value">{{ saved_recipes_count }}</span>
+                    <span class="stat-label">Saved Recipes</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-icon">🛒</span>
+                <div class="stat-info">
+                    <span class="stat-value">{{ grocery_list_count }}</span>
+                    <span class="stat-label">Grocery Lists</span>
+                </div>
+            </div>
         </div>
-        <h2 class="mt-3 text-white text-2xl font-light tracking-wide">
-            PROFILE
-        </h2>
-        <form class="w-full max-w-md mt-8 space-y-6">
-            <div>
-                <label class="block text-white text-sm font-normal mb-1 tracking-wide" for="name">
-                    NAME
-                </label>
-                <div class="relative">
-                    <input
-                        class="w-full rounded-full bg-gray-300 text-gray-900 text-base py-2 px-5 pr-12 focus:outline-none"
-                        id="name" type="text" />
-                    <i
-                        class="fas fa-edit absolute top-1/2 right-4 -translate-y-1/2 text-gray-900 text-lg cursor-pointer">
-                    </i>
-                </div>
-            </div>
-            <div>
-                <label class="block text-white text-sm font-normal mb-1 tracking-wide" for="gender">
-                    GENDER
-                </label>
-                <div class="relative">
-                    <input
-                        class="w-full rounded-full bg-gray-300 text-gray-900 text-base py-2 px-5 pr-12 focus:outline-none"
-                        id="gender" type="text" />
-                    <i
-                        class="fas fa-edit absolute top-1/2 right-4 -translate-y-1/2 text-gray-900 text-lg cursor-pointer">
-                    </i>
-                </div>
-            </div>
-            <div class="flex flex-wrap gap-x-6">
-                <div class="flex-1 min-w-[150px]">
-                    <label class="block text-white text-sm font-normal mb-1 tracking-wide" for="age">
-                        AGE
-                    </label>
-                    <div class="relative">
-                        <input
-                            class="w-full rounded-full bg-gray-300 text-gray-900 text-base py-2 px-5 pr-12 focus:outline-none"
-                            id="age" type="text" />
-                        <i
-                            class="fas fa-edit absolute top-1/2 right-4 -translate-y-1/2 text-gray-900 text-lg cursor-pointer">
-                        </i>
                     </div>
-                </div>
-                <div class="flex-1 min-w-[150px]">
-                    <label class="block text-white text-sm font-normal mb-1 tracking-wide" for="gym">
-                        GYM
-                    </label>
-                    <div class="relative">
-                        <input
-                            class="w-full rounded-full bg-gray-300 text-gray-900 text-base py-2 px-5 pr-12 focus:outline-none"
-                            id="gym" type="text" />
-                        <i
-                            class="fas fa-edit absolute top-1/2 right-4 -translate-y-1/2 text-gray-900 text-lg cursor-pointer">
-                        </i>
-                    </div>
-                </div>
-            </div>
-            <div>
-                <label class="block text-white text-sm font-normal mb-1 tracking-wide" for="email">
-                    EMAIL ID
-                </label>
-                <div class="relative">
-                    <input
-                        class="w-full rounded-full bg-gray-300 text-gray-900 text-base py-2 px-5 pr-12 focus:outline-none"
-                        id="email" type="email" />
-                    <i
-                        class="fas fa-edit absolute top-1/2 right-4 -translate-y-1/2 text-gray-900 text-lg cursor-pointer">
-                    </i>
-                </div>
-            </div>
-            <div>
-                <label class="block text-white text-sm font-normal mb-1 tracking-wide" for="allergy">
-                    ALLERGY
-                </label>
-                <div class="relative">
-                    <input
-                        class="w-full rounded-full bg-gray-300 text-gray-900 text-base py-2 px-5 pr-12 focus:outline-none"
-                        id="allergy" type="text" />
-                    <i
-                        class="fas fa-edit absolute top-1/2 right-4 -translate-y-1/2 text-gray-900 text-lg cursor-pointer">
-                    </i>
-                </div>
-            </div>
-        </form>
-    </div>
-</body>
 
-</html>
+    <div class="profile-content">
+        <div class="profile-section">
+            <h3>Account Information</h3>
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">User ID:</span>
+                    <span class="info-value">{{ user.user_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ user.email }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>Account Settings</h3>
+            <div class="settings-card">
+                <form method="POST" action="{{ url_for('update_profile') }}" class="settings-form">
+                    <div class="form-group">
+                        <label for="email">Update Email</label>
+                        <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input type="password" id="current_password" name="current_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input type="password" id="new_password" name="new_password">
+                    </div>
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password">
+                    </div>
+
+                    <!-- Allergen Preferences -->
+                    <div class="form-group allergen-preferences">
+                        <label>Allergen Preferences:</label>
+                        <div class="allergen-grid">
+                            {% set user_allergens = user.allergens.split(',') if user.allergens else [] %}
+                            <div class="allergen-option">
+                                <input type="checkbox" id="dairy" name="allergens" value="Dairy" 
+                                       {% if 'Dairy' in user_allergens %}checked{% endif %}>
+                                <label for="dairy">Dairy</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="eggs" name="allergens" value="Eggs"
+                                       {% if 'Eggs' in user_allergens %}checked{% endif %}>
+                                <label for="eggs">Eggs</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="fish" name="allergens" value="Fish"
+                                       {% if 'Fish' in user_allergens %}checked{% endif %}>
+                                <label for="fish">Fish</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="shellfish" name="allergens" value="Shellfish"
+                                       {% if 'Shellfish' in user_allergens %}checked{% endif %}>
+                                <label for="shellfish">Shellfish</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="tree_nuts" name="allergens" value="Tree Nuts"
+                                       {% if 'Tree Nuts' in user_allergens %}checked{% endif %}>
+                                <label for="tree_nuts">Tree Nuts</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="peanuts" name="allergens" value="Peanuts"
+                                       {% if 'Peanuts' in user_allergens %}checked{% endif %}>
+                                <label for="peanuts">Peanuts</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="wheat" name="allergens" value="Wheat"
+                                       {% if 'Wheat' in user_allergens %}checked{% endif %}>
+                                <label for="wheat">Wheat</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="soy" name="allergens" value="Soy"
+                                       {% if 'Soy' in user_allergens %}checked{% endif %}>
+                                <label for="soy">Soy</label>
+                            </div>
+                            <div class="allergen-option">
+                                <input type="checkbox" id="sesame" name="allergens" value="Sesame"
+                                       {% if 'Sesame' in user_allergens %}checked{% endif %}>
+                                <label for="sesame">Sesame</label>
+                            </div>
+                        </div>
+                </div>
+
+                    <button type="submit" class="btn update-btn">Update Profile</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <h3>Recent Activity</h3>
+            <div class="activity-card">
+                {% if recent_activity %}
+                    {% for activity in recent_activity %}
+                    <div class="activity-item">
+                        <span class="activity-icon">{{ activity.icon }}</span>
+                        <span class="activity-text">{{ activity.description }}</span>
+                        <span class="activity-time">{{ activity.time }}</span>
+                </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-activity">No recent activity</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.profile-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    min-width: 150px;
+    transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c3e50;
+    display: block;
+}
+
+.stat-label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.profile-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.profile-section {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.profile-section h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4DB9C3;
+}
+
+.info-card, .settings-card, .activity-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.info-value {
+    color: #2c3e50;
+}
+
+.settings-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.form-group input {
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    width: auto;
+}
+
+.form-group input:focus {
+    border-color: #4DB9C3;
+    box-shadow: 0 0 0 3px rgba(77, 185, 195, 0.2);
+    outline: none;
+}
+
+.update-btn {
+    background: linear-gradient(135deg, #4DB9C3 0%, #0B4B57 100%);
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.update-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(77, 185, 195, 0.3);
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    font-size: 1.2rem;
+}
+
+.activity-text {
+    flex: 1;
+    color: #2c3e50;
+}
+
+.activity-time {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.no-activity {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}
+
+.allergen-preferences {
+    margin-top: 20px;
+}
+
+.allergen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.allergen-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.allergen-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.allergen-option label {
+    font-weight: normal;
+    color: #666;
+}
+
+@media screen and (max-width: 768px) {
+    .profile-stats {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stat-card {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    .profile-content {
+        grid-template-columns: 1fr;
+    }
+
+    .allergen-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
