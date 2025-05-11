@@ -16,7 +16,7 @@
                     <img src="{{ recipe.image }}" alt="{{ recipe.name }}" class="recipe-image">
                     <h4>{{ recipe.name }}</h4>
                     <form method="POST" action="{{ url_for('remove_from_grocery_list') }}" class="remove-form">
-                        <input type="hidden" name="recipe_id" value="{{ recipe.idx }}">
+                        <input type="hidden" name="recipe_name" value="{{ recipe.name }}">
                         <button type="submit" class="btn remove-btn">❌ Remove</button>
                     </form>
                 </div>
@@ -181,7 +181,6 @@
     padding: 12px 25px;
     border-radius: 10px;
     text-decoration: none;
-    display: inline-block;
     transition: all 0.3s ease;
 }
 

@@ -23,7 +23,7 @@
 </div>
 {% endif %}
 
-<img src="{{ recipe.image }}" alt="Recipe Image" width="300px" style="border-radius: 10px; margin-bottom: 20px;">
+<img src="{{ recipe.image|default('') }}" alt="Recipe Image" width="300px" style="border-radius: 10px; margin-bottom: 20px;">
 
 <div class="grid-container">
     <!-- Nutrition Section -->
@@ -31,7 +31,7 @@
         <div class="card">
             <h4>🍽️ Nutrition Info</h4>
             <ul class="nutrition-list">
-                <li><strong>Diet Type:</strong> {{ recipe.diet_type }}</li>
+                <li><strong>Diet Type:</strong> {{ recipe.diet_type|default('N/A') }}</li>
                 <li><strong>Calories:</strong> {{ recipe.nutrition.calories|default(0)|round }} kcal</li>
                 <li><strong>Protein:</strong> {{ recipe.nutrition.protein|default(0)|round(1) }} g</li>
                 <li><strong>Fat:</strong> {{ recipe.nutrition.fat|default(0)|round(1) }} g</li>
@@ -59,7 +59,7 @@
         <div class="card">
             <h4>🧂 Ingredients</h4>
             <ul class="ingredient-list">
-                {% for item in recipe.ingredients %}
+                {% for item in recipe.ingredients|default([]) %}
                 <li>{{ item }}</li>
                 {% endfor %}
             </ul>
@@ -69,24 +69,33 @@
 
 <div class="recipe-actions">
     <form method="POST" action="{{ url_for('save_recipe') }}" class="action-form">
-        <input type="hidden" name="recipe_data" value="{{ {
-            'name': recipe.name,
-            'image': recipe.image,
-            'recipe_link': recipe.recipe_link,
-            'diet_type': recipe.diet_type,
-            'ingredients': recipe.ingredients,
-            'nutrition': {
-                'calories': recipe.nutrition.calories|default(0),
-                'protein': recipe.nutrition.protein|default(0),
-                'fat': recipe.nutrition.fat|default(0),
-                'carbohydrates': recipe.nutrition.carbohydrates|default(0),
-                'fibers': recipe.nutrition.fibers|default(0)
-            }
-        }|tojson }}">
+        <input type="hidden" name="recipe_data" value='{{ {"name": recipe.name|default("Unknown Recipe"),
+         "image": recipe.image|default(""),
+          "recipe_url": recipe.recipe_link|default(""),
+          "diet_type": recipe.diet_type|default("N/A"),
+           "ingredients": recipe.ingredients|default([]),
+           "nutrition": {"calories": recipe.nutrition.calories|default(0)|float,
+            "protein": recipe.nutrition.protein|default(0)|float,
+             "fat": recipe.nutrition.fat|default(0)|float,
+              "carbohydrates": recipe.nutrition.carbohydrates|default(0)|float,
+               "fiber": recipe.nutrition.fibers|default(0)|float}}|tojson|safe }}'>
         <button type="submit" class="btn save-btn">💾 Save Recipe</button>
     </form>
     <form method="POST" action="{{ url_for('add_to_grocery_list') }}" class="action-form">
-        <input type="hidden" name="recipe_id" value="{{ recipe.idx }}">
+        <input type="hidden" name="recipe_data" value='{{ {
+            "name": recipe.name|default("Unknown Recipe"),
+            "image": recipe.image|default(""),
+            "recipe_url": recipe.recipe_link|default(""),
+            "ingredients": recipe.ingredients|default([]),
+            "diet_type": recipe.diet_type|default("N/A"),
+            "nutrition": {
+                "calories": recipe.nutrition.calories|default(0)|float,
+                "protein": recipe.nutrition.protein|default(0)|float,
+                "fat": recipe.nutrition.fat|default(0)|float,
+                "carbohydrates": recipe.nutrition.carbohydrates|default(0)|float,
+                "fiber": recipe.nutrition.fibers|default(0)|float
+            }
+        }|tojson|safe }}'>
         <button type="submit" class="btn grocery-btn">🛒 Add to Grocery List</button>
     </form>
 </div>

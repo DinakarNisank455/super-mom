@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition Goals - Personal Recipe Recommender{% endblock %}
+
+{% block content %}
+<div class="nutrition-goals">
+    <h2>🎯 Set Your Nutrition Goals</h2>
+    
+    <form method="POST" class="goals-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="daily_calories">Daily Calories</label>
+                <input type="number" id="daily_calories" name="daily_calories" 
+                       value="{{ goals.daily_calories }}" min="0" step="50" required>
+                <span class="range-info">Recommended: 1500-2500 kcal</span>
+            </div>
+
+            <div class="form-group">
+                <label for="daily_protein">Daily Protein (g)</label>
+                <input type="number" id="daily_protein" name="daily_protein" 
+                       value="{{ goals.daily_protein }}" min="0" step="5" required>
+                <span class="range-info">Recommended: 45-65g</span>
+            </div>
+
+            <div class="form-group">
+                <label for="daily_fat">Daily Fat (g)</label>
+                <input type="number" id="daily_fat" name="daily_fat" 
+                       value="{{ goals.daily_fat }}" min="0" step="5" required>
+                <span class="range-info">Recommended: 55-75g</span>
+            </div>
+
+            <div class="form-group">
+                <label for="daily_carbs">Daily Carbohydrates (g)</label>
+                <input type="number" id="daily_carbs" name="daily_carbs" 
+                       value="{{ goals.daily_carbs }}" min="0" step="10" required>
+                <span class="range-info">Recommended: 250-350g</span>
+            </div>
+
+            <div class="form-group">
+                <label for="daily_fiber">Daily Fiber (g)</label>
+                <input type="number" id="daily_fiber" name="daily_fiber" 
+                       value="{{ goals.daily_fiber }}" min="0" step="5" required>
+                <span class="range-info">Recommended: 25-35g</span>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Save Goals</button>
+            <a href="{{ url_for('nutrition_monitor') }}" class="btn btn-secondary">View Progress</a>
+        </div>
+    </form>
+
+    <div class="goals-info">
+        <h3>💡 Tips for Setting Goals</h3>
+        <ul>
+            <li>Calories: Base on your activity level and weight goals</li>
+            <li>Protein: Aim for 0.8-1.2g per pound of body weight</li>
+            <li>Fat: 20-35% of total daily calories</li>
+            <li>Carbs: Remaining calories after protein and fat</li>
+            <li>Fiber: At least 25g for women, 38g for men</li>
+        </ul>
+    </div>
+</div>
+{% endblock %} 

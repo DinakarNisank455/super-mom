@@ -1,124 +1,299 @@
 {% extends "base.html" %}
 
-{% block title %}Nutrition Monitor - Personal Recipe Recommender{% endblock %}
+{% block title %}Nutrition Monitor{% endblock %}
 
 {% block content %}
-<div class="nutrition-monitor">
-    <h2>📊 Nutrition Monitor</h2>
+<div class="nmcontainer">
+    <h1>📊 Nutrition Monitor</h1>
     
-    <!-- Period Toggle -->
-    <div class="period-toggle">
-        <a href="{{ url_for('nutrition_monitor', period='daily') }}" 
-           class="btn {% if period == 'daily' %}active{% endif %}">Daily</a>
-        <a href="{{ url_for('nutrition_monitor', period='monthly') }}" 
-           class="btn {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+    <!-- Period Selector -->
+    <div class="period-selector">
+        <a href="{{ url_for('nutrition_monitor', period='daily') }}" class="btn {% if period == 'daily' %}active{% endif %}">Daily</a>
+        <a href="{{ url_for('nutrition_monitor', period='monthly') }}" class="btn {% if period == 'monthly' %}active{% endif %}">Monthly</a>
+        
+        {% if period == 'monthly' %}
+        <div class="month-selector">
+            <select id="monthSelect" onchange="changeMonth(this.value)">
+                <option value="">Last 30 Days</option>
+                {% for month in available_months %}
+                <option value="{{ month.month_value }}" {% if selected_month == month.month_value %}selected{% endif %}>
+                    {{ month.month_label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
     </div>
 
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-        <div class="card">
-            <h3>Total Meals</h3>
-            <p class="number">{{ totals.meals }}</p>
-            {% if period == 'monthly' %}
-            <p class="average">Avg: {{ averages.meals|round(1) }} per day</p>
-            {% endif %}
-        </div>
-        
-        <div class="card">
-            <h3>Calories</h3>
-            <p class="number">{{ totals.calories|round }} kcal</p>
-            {% if period == 'monthly' %}
-            <p class="average">Avg: {{ averages.calories|round }} kcal/day</p>
-            {% endif %}
-            {% if period == 'daily' and progress.calories is not none %}
-            <div class="progress-bar">
-                <div class="progress" style="width: {{ (progress.calories|float|min(100))|string + '%' }}"></div>
-                <span>{{ progress.calories|round }}% of goal</span>
+    <!-- Nutrition Distribution Chart -->
+    <div class="chart-container">
+        <canvas id="nutritionChart"></canvas>
+    </div>
+
+    <!-- Nutrition Summary -->
+    <div class="nutrition-summary">
+        <div class="summary-card">
+            <h3>Total Intake</h3>
+            <div class="summary-content">
+                <p>Calories: {{ totals.calories|round|int }} kcal</p>
+                <p>Protein: {{ totals.protein|round|int }}g</p>
+                <p>Fat: {{ totals.fat|round|int }}g</p>
+                <p>Carbs: {{ totals.carbs|round|int }}g</p>
+                <p>Fiber: {{ totals.fiber|round|int }}g</p>
             </div>
-            {% endif %}
         </div>
 
-        <div class="card">
-            <h3>Protein</h3>
-            <p class="number">{{ totals.protein|round(1) }}g</p>
-            {% if period == 'monthly' %}
-            <p class="average">Avg: {{ averages.protein|round(1) }}g/day</p>
-            {% endif %}
-            {% if period == 'daily' and progress.protein is not none %}
-            <div class="progress-bar">
-                <div class="progress" style="width: {{ (progress.protein|float|min(100))|string + '%' }}"></div>
-                <span>{{ progress.protein|round }}% of goal</span>
+        <div class="summary-card">
+            <h3>Daily Average</h3>
+            <div class="summary-content">
+                <p>Calories: {{ averages.calories|round|int }} kcal</p>
+                <p>Protein: {{ averages.protein|round|int }}g</p>
+                <p>Fat: {{ averages.fat|round|int }}g</p>
+                <p>Carbs: {{ averages.carbs|round|int }}g</p>
+                <p>Fiber: {{ averages.fiber|round|int }}g</p>
             </div>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h3>Fat</h3>
-            <p class="number">{{ totals.fat|round(1) }}g</p>
-            {% if period == 'monthly' %}
-            <p class="average">Avg: {{ averages.fat|round(1) }}g/day</p>
-            {% endif %}
-            {% if period == 'daily' and progress.fat is not none %}
-            <div class="progress-bar">
-                <div class="progress" style="width: {{ (progress.fat|float|min(100))|string + '%' }}"></div>
-                <span>{{ progress.fat|round }}% of goal</span>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h3>Carbs</h3>
-            <p class="number">{{ totals.carbs|round(1) }}g</p>
-            {% if period == 'monthly' %}
-            <p class="average">Avg: {{ averages.carbs|round(1) }}g/day</p>
-            {% endif %}
-            {% if period == 'daily' and progress.carbs is not none %}
-            <div class="progress-bar">
-                <div class="progress" style="width: {{ (progress.carbs|float|min(100))|string + '%' }}"></div>
-                <span>{{ progress.carbs|round }}% of goal</span>
-            </div>
-            {% endif %}
-        </div>
-
-        <div class="card">
-            <h3>Fiber</h3>
-            <p class="number">{{ totals.fiber|round(1) }}g</p>
-            {% if period == 'monthly' %}
-            <p class="average">Avg: {{ averages.fiber|round(1) }}g/day</p>
-            {% endif %}
-            {% if period == 'daily' and progress.fiber is not none %}
-            <div class="progress-bar">
-                <div class="progress" style="width: {{ (progress.fiber|float|min(100))|string + '%' }}"></div>
-                <span>{{ progress.fiber|round }}% of goal</span>
-            </div>
-            {% endif %}
         </div>
     </div>
 
     <!-- Meal History -->
     <div class="meal-history">
-        <h3>Meal History</h3>
-        {% if nutrition_data %}
-            <div class="meal-list">
-                {% for meal in nutrition_data %}
-                    <div class="meal-card">
-                        <div class="meal-header">
-                            <h4>{{ meal.recipe_name }}</h4>
-                            <span class="meal-time">{{ meal.saved_at.strftime('%I:%M %p') }}</span>
-                        </div>
-                        <div class="meal-nutrition">
-                            <p>Calories: {{ meal.calories|round }} kcal</p>
-                            <p>Protein: {{ meal.protein|round(1) }}g</p>
-                            <p>Fat: {{ meal.fat|round(1) }}g</p>
-                            <p>Carbs: {{ meal.carbohydrates|round(1) }}g</p>
-                            <p>Fiber: {{ meal.fiber|round(1) }}g</p>
-                        </div>
-                    </div>
-                {% endfor %}
+        <h2>Meal History</h2>
+        <div class="meal-list">
+            {% for meal in nutrition_data %}
+            <div class="meal-card">
+                <div class="meal-info">
+                    <h3>{{ meal.recipe_name }}</h3>
+                    <p class="meal-time">
+                        {% if period == 'daily' %}
+                            {{ meal.saved_at.strftime('%H:%M') }}
+                        {% else %}
+                            {{ meal.date.strftime('%Y-%m-%d') }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="meal-nutrition">
+                    {% if period == 'daily' %}
+                        <p>Calories: {{ meal.calories|round|int }} kcal</p>
+                        <p>Protein: {{ meal.protein|round|int }}g</p>
+                        <p>Fat: {{ meal.fat|round|int }}g</p>
+                        <p>Carbs: {{ meal.carbohydrates|round|int }}g</p>
+                    {% else %}
+                        <p>Calories: {{ meal.total_calories|round|int }} kcal</p>
+                        <p>Protein: {{ meal.total_protein|round|int }}g</p>
+                        <p>Fat: {{ meal.total_fat|round|int }}g</p>
+                        <p>Carbs: {{ meal.total_carbs|round|int }}g</p>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <p class="no-data">No meals recorded for this period.</p>
-        {% endif %}
+            {% endfor %}
+        </div>
     </div>
 </div>
-{% endblock %} 
+
+<style>
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.period-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn.active {
+    background-color: #4DB9C3;
+    color: white;
+}
+
+.chart-container {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.nutrition-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.summary-card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.summary-card h3 {
+    margin-top: 0;
+    color: #333;
+    border-bottom: 2px solid #4DB9C3;
+    padding-bottom: 10px;
+}
+
+.summary-content p {
+    margin: 10px 0;
+    color: #666;
+}
+
+.meal-history {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.meal-list {
+    display: grid;
+    gap: 15px;
+}
+
+.meal-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: transform 0.2s ease;
+}
+
+.meal-card:hover {
+    transform: translateY(-2px);
+}
+
+.meal-info h3 {
+    margin: 0;
+    color: #333;
+}
+
+.meal-time {
+    color: #666;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.meal-nutrition {
+    text-align: right;
+}
+
+.meal-nutrition p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.month-selector {
+    margin-left: 15px;
+}
+
+.month-selector select {
+    padding: 8px 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.month-selector select:hover {
+    border-color: #4DB9C3;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('nutritionChart').getContext('2d');
+    
+    // Get nutrition data from the template
+    const nutritionData = {
+        protein: {{ totals.protein|round|int }},
+        fat: {{ totals.fat|round|int }},
+        carbs: {{ totals.carbs|round|int }},
+        fiber: {{ totals.fiber|round|int }}
+    };
+
+    // Calculate total for percentage
+    const total = Object.values(nutritionData).reduce((a, b) => a + b, 0);
+
+    // Create the pie chart
+    new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Protein', 'Fat', 'Carbs', 'Fiber'],
+            datasets: [{
+                data: [
+                    nutritionData.protein,
+                    nutritionData.fat,
+                    nutritionData.carbs,
+                    nutritionData.fiber
+                ],
+                backgroundColor: [
+                    '#4DB9C3',  // Protein - Teal
+                    '#FF6B6B',  // Fat - Coral
+                    '#4ECDC4',  // Carbs - Mint
+                    '#45B7D1'   // Fiber - Blue
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        font: {
+                            size: 14
+                        }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const value = context.raw;
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${context.label}: ${value}g (${percentage}%)`;
+                        }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: '{{ period|title }} Nutrition Distribution',
+                    font: {
+                        size: 18
+                    },
+                    padding: {
+                        top: 10,
+                        bottom: 30
+                    }
+                }
+            }
+        }
+    });
+});
+
+function changeMonth(monthValue) {
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set('month', monthValue);
+    window.location.href = currentUrl.toString();
+}
+</script>
+{% endblock %}

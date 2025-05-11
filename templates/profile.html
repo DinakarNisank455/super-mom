@@ -22,7 +22,7 @@
                 </div>
             </div>
         </div>
-    </div>
+                    </div>
 
     <div class="profile-content">
         <div class="profile-section">
@@ -111,7 +111,7 @@
                                 <label for="sesame">Sesame</label>
                             </div>
                         </div>
-                    </div>
+                </div>
 
                     <button type="submit" class="btn update-btn">Update Profile</button>
                 </form>
@@ -127,7 +127,7 @@
                         <span class="activity-icon">{{ activity.icon }}</span>
                         <span class="activity-text">{{ activity.description }}</span>
                         <span class="activity-time">{{ activity.time }}</span>
-                    </div>
+                </div>
                     {% endfor %}
                 {% else %}
                     <p class="no-activity">No recent activity</p>
@@ -258,6 +258,7 @@
     border-radius: 8px;
     font-size: 1rem;
     transition: all 0.3s ease;
+    width: auto;
 }
 
 .form-group input:focus {
